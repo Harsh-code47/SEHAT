@@ -55,7 +55,7 @@ export const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-            <img src={sehatLogo} alt="SEHAT Logo" className="h-10 w-10 rounded-lg object-contain" />
+            <img src={sehatLogo} alt="SEHAT Logo" className="h-14 w-14 rounded-lg object-contain" />
             <span className="bg-gradient-primary bg-clip-text text-transparent">
               SEHAT
             </span>
