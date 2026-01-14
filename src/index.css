@@ -8,83 +8,83 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 24% 16%;
+    --background: 60 100% 99%;
+    --foreground: 190 30% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 210 24% 16%;
+    --card: 60 60% 98%;
+    --card-foreground: 190 30% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 24% 16%;
+    --popover: 60 60% 98%;
+    --popover-foreground: 190 30% 15%;
 
-    /* Medical green as primary */
-    --primary: 142 76% 36%;
+    /* Light cyan/teal as primary */
+    --primary: 175 70% 41%;
     --primary-foreground: 0 0% 100%;
     
-    /* Vibrant orange as secondary */
-    --secondary: 25 95% 53%;
-    --secondary-foreground: 0 0% 100%;
+    /* Light yellow/gold as secondary */
+    --secondary: 48 96% 53%;
+    --secondary-foreground: 48 50% 15%;
 
-    /* Soft blue for accents */
-    --accent: 207 90% 54%;
+    /* Aqua blue for accents */
+    --accent: 190 90% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 60 30% 96%;
+    --muted-foreground: 190 15% 45%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 36%;
+    --border: 175 30% 88%;
+    --input: 175 30% 88%;
+    --ring: 175 70% 41%;
 
     --radius: 0.75rem;
 
-    /* Custom health-themed gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(207 90% 54%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(142 76% 36%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(207 90% 54%) 0%, hsl(142 76% 36%) 50%, hsl(25 95% 53%) 100%);
+    /* Light yellow to cyan/aqua gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(175 70% 41%) 0%, hsl(190 90% 50%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(48 96% 53%) 0%, hsl(175 70% 41%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(48 96% 60%) 0%, hsl(175 70% 45%) 50%, hsl(190 90% 50%) 100%);
     
     /* Health status colors */
-    --health-normal: 142 76% 36%;
-    --health-warning: 45 93% 47%;
+    --health-normal: 175 70% 41%;
+    --health-warning: 48 93% 50%;
     --health-danger: 0 84% 60%;
-    --health-optimal: 142 71% 45%;
+    --health-optimal: 160 70% 42%;
   }
 
   .dark {
-    --background: 210 24% 10%;
-    --foreground: 210 20% 98%;
+    --background: 190 30% 8%;
+    --foreground: 60 30% 95%;
 
-    --card: 210 24% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 190 25% 12%;
+    --card-foreground: 60 30% 95%;
 
-    --popover: 210 24% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 190 25% 12%;
+    --popover-foreground: 60 30% 95%;
 
-    --primary: 142 76% 45%;
+    --primary: 175 70% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 25 95% 60%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 48 96% 60%;
+    --secondary-foreground: 48 50% 15%;
 
-    --accent: 207 90% 61%;
+    --accent: 190 90% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 190 25% 18%;
+    --muted-foreground: 175 20% 60%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 20%;
-    --input: 217.2 32.6% 20%;
-    --ring: 142 76% 45%;
+    --border: 190 25% 22%;
+    --input: 190 25% 22%;
+    --ring: 175 70% 50%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(142 76% 45%) 0%, hsl(207 90% 61%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(25 95% 60%) 0%, hsl(142 76% 45%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(207 90% 61%) 0%, hsl(142 76% 45%) 50%, hsl(25 95% 60%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(175 70% 50%) 0%, hsl(190 90% 55%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(48 96% 60%) 0%, hsl(175 70% 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(48 96% 65%) 0%, hsl(175 70% 50%) 50%, hsl(190 90% 55%) 100%);
   }
 }
 
