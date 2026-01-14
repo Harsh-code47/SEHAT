@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Activity, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import sehatLogo from "@/assets/sehat-logo.png";
 
 export const Navigation = () => {
   const [user, setUser] = useState<any>(null);
@@ -54,9 +55,7 @@ export const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="p-2 rounded-lg bg-gradient-primary">
-              <Activity className="h-6 w-6 text-white" />
-            </div>
+            <img src={sehatLogo} alt="SEHAT Logo" className="h-10 w-10 rounded-lg object-contain" />
             <span className="bg-gradient-primary bg-clip-text text-transparent">
               SEHAT
             </span>
