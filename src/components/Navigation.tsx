@@ -58,7 +58,7 @@ export const Navigation = () => {
               <Activity className="h-6 w-6 text-white" />
             </div>
             <span className="bg-gradient-primary bg-clip-text text-transparent">
-              Repo-Lyzer
+              SEHAT
             </span>
           </Link>
 
