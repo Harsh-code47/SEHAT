@@ -88,6 +88,33 @@ All colors MUST be HSL.
   }
 }
 
+@layer utilities {
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background: linear-gradient(
+      -45deg,
+      hsl(48 96% 60%),
+      hsl(175 70% 45%),
+      hsl(190 90% 50%),
+      hsl(48 96% 55%),
+      hsl(175 70% 50%)
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 8s ease infinite;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
