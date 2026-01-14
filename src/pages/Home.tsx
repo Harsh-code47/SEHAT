@@ -10,7 +10,7 @@ const Home = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-hero py-20 md:py-32">
+      <section className="relative overflow-hidden animate-gradient py-20 md:py-32">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center text-white">
             <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white/10 backdrop-blur rounded-full">
@@ -21,7 +21,7 @@ const Home = () => {
               Understand Your Medical Reports With AI
             </h1>
             <p className="text-lg md:text-xl mb-8 text-white/90 max-w-2xl mx-auto">
-              REPO-LYZER uses advanced NLP and AI to interpret lab reports, calculate BMI, 
+              SEHAT uses advanced NLP and AI to interpret lab reports, calculate BMI, 
               and provide easy-to-understand health insights instantly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -136,7 +136,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="py-8 border-t">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Repo-Lyzer. Developed by Harsh Gupta & Divya Maliwal</p>
+          <p>© 2025 SEHAT. Developed by Harsh Gupta & Divya Maliwal</p>
           <p className="text-sm mt-2">Sharda University - Department of Computer Science and Engineering</p>
         </div>
       </footer>
