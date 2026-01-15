@@ -7,10 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Activity, User, Stethoscope } from "lucide-react";
+import { User, Stethoscope } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import authHeroImage from "@/assets/auth-hero.jpg";
+import sehatLogo from "@/assets/sehat-logo.png";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -143,14 +144,11 @@ const Auth = () => {
           <CardContent className="p-0">
             {/* Logo */}
             <div className="flex justify-center mb-8">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-gradient-primary">
-                  <Activity className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-foreground">
-                  SE<span className="text-primary">HAT</span>
-                </span>
-              </div>
+              <img 
+                src={sehatLogo} 
+                alt="SEHAT Logo" 
+                className="h-16 w-auto"
+              />
             </div>
 
             {/* Role Toggle */}
