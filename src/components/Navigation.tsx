@@ -67,6 +67,11 @@ export const Navigation = () => {
             <Link to="/" className="text-foreground hover:text-primary transition-colors">
               Home
             </Link>
+            {user && (
+              <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
+                Dashboard
+              </Link>
+            )}
             <Link to="/bmi-calculator" className="text-foreground hover:text-primary transition-colors">
               BMI Calculator
             </Link>

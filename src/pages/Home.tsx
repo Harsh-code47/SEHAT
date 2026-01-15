@@ -136,8 +136,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="py-8 border-t">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 SEHAT. Developed by Harsh Gupta & Divya Maliwal</p>
-          <p className="text-sm mt-2">Sharda University - Department of Computer Science and Engineering</p>
+          <p>© 2025 SEHAT. All Rights Reserved.</p>
         </div>
       </footer>
     </div>

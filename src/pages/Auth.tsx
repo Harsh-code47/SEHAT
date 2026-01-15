@@ -34,7 +34,7 @@ const Auth = () => {
     // Check if already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        navigate("/dashboard");
       }
     });
   }, [navigate]);
@@ -99,7 +99,7 @@ const Auth = () => {
         title: "Success!",
         description: "Logged in successfully",
       });
-      navigate("/");
+      navigate("/dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -143,12 +143,15 @@ const Auth = () => {
         <Card className="w-full max-w-md border-0 shadow-none">
           <CardContent className="p-0">
             {/* Logo */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center items-center gap-3 mb-8">
               <img 
                 src={sehatLogo} 
                 alt="SEHAT Logo" 
-                className="h-16 w-auto"
+                className="h-14 w-14 rounded-lg object-contain"
               />
+              <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                SEHAT
+              </span>
             </div>
 
             {/* Role Toggle */}
