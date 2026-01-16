@@ -63,26 +63,27 @@ export const Navigation = () => {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-foreground hover:text-primary transition-colors">
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Home
             </Link>
-            {user && (
-              <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
-                Dashboard
-              </Link>
-            )}
-            <Link to="/bmi-calculator" className="text-foreground hover:text-primary transition-colors">
-              BMI Calculator
+            <Link to="/bmi-calculator" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              BMI
             </Link>
-            <Link to="/report-analyzer" className="text-foreground hover:text-primary transition-colors">
+            <Link to="/report-analyzer" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Report Analyzer
+            </Link>
+            <Link to="/consultancy" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              Consultancy
+            </Link>
+            <Link to="/prescription" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              Prescription
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="rounded-full"
@@ -96,13 +97,18 @@ export const Navigation = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full">
+                  <Button variant="outline" size="icon" className="rounded-full border-2">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem className="text-sm text-muted-foreground">
                     {user.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer">
+                      Dashboard
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -111,8 +117,8 @@ export const Navigation = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild className="bg-gradient-primary hover:opacity-90">
-                <Link to="/auth">Login</Link>
+              <Button asChild variant="outline" className="rounded-full px-6">
+                <Link to="/auth">Login / Signup</Link>
               </Button>
             )}
           </div>
