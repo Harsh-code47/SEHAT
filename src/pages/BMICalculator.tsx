@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
-import { Activity, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Activity, TrendingDown, TrendingUp } from "lucide-react";
+import { BMIMeter } from "@/components/BMIMeter";
 
 const BMICalculator = () => {
   const [user, setUser] = useState<any>(null);
@@ -97,12 +97,6 @@ const BMICalculator = () => {
     }
   };
 
-  const bmiChartData = [
-    { category: "Underweight", range: 17, fill: "hsl(var(--health-warning))" },
-    { category: "Normal", range: 21.75, fill: "hsl(var(--health-normal))" },
-    { category: "Overweight", range: 27.5, fill: "hsl(var(--health-warning))" },
-    { category: "Obese", range: 35, fill: "hsl(var(--health-danger))" },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -199,54 +193,33 @@ const BMICalculator = () => {
                   <CardDescription>Based on your inputs</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="text-center p-6 rounded-lg bg-gradient-primary/10">
-                    <div className="text-5xl font-bold text-primary mb-2">
-                      {bmiResult.bmi}
-                    </div>
-                    <div className="text-xl font-semibold">{bmiResult.category}</div>
+                  <div className="flex justify-center p-4">
+                    <BMIMeter bmi={parseFloat(bmiResult.bmi)} category={bmiResult.category} />
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground">
-                      BMI RANGES COMPARISON
-                    </h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={bmiChartData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" domain={[0, 40]} />
-                        <YAxis dataKey="category" type="category" width={100} />
-                        <Tooltip />
-                        <ReferenceLine
-                          x={parseFloat(bmiResult.bmi)}
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          label={{ value: "You", position: "top" }}
-                        />
-                        <Bar dataKey="range" radius={[0, 8, 8, 0]}>
-                          {bmiChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Underweight:</span>
-                      <span className="font-medium">&lt; 18.5</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Normal:</span>
-                      <span className="font-medium">18.5 - 24.9</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Overweight:</span>
-                      <span className="font-medium">25 - 29.9</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Obese:</span>
-                      <span className="font-medium">&ge; 30</span>
+                  <div className="space-y-2 text-sm border-t pt-4">
+                    <h3 className="font-semibold text-muted-foreground mb-3">BMI RANGES</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-amber-500" />
+                        <span className="text-muted-foreground">Underweight:</span>
+                        <span className="font-medium">&lt; 18.5</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-green-500" />
+                        <span className="text-muted-foreground">Normal:</span>
+                        <span className="font-medium">18.5 - 24.9</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-amber-500" />
+                        <span className="text-muted-foreground">Overweight:</span>
+                        <span className="font-medium">25 - 29.9</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-red-500" />
+                        <span className="text-muted-foreground">Obese:</span>
+                        <span className="font-medium">&ge; 30</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

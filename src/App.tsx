@@ -9,6 +9,8 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import BMICalculator from "./pages/BMICalculator";
 import ReportAnalyzer from "./pages/ReportAnalyzer";
+import Consultancy from "./pages/Consultancy";
+import Prescription from "./pages/Prescription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/bmi-calculator" element={<BMICalculator />} />
             <Route path="/report-analyzer" element={<ReportAnalyzer />} />
+            <Route path="/consultancy" element={<Consultancy />} />
+            <Route path="/prescription" element={<Prescription />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
