@@ -9,82 +9,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Video, Star, Clock, Calendar as CalendarIcon, Stethoscope, Brain, Heart, Bone, Eye, Baby } from "lucide-react";
-
-const doctors = [
-  {
-    id: 1,
-    name: "Dr. Priya Sharma",
-    specialty: "General Physician",
-    experience: "15 years",
-    rating: 4.9,
-    reviews: 284,
-    availability: "Available Today",
-    fee: "₹500",
-    icon: Stethoscope,
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
-  },
-  {
-    id: 2,
-    name: "Dr. Rajesh Kumar",
-    specialty: "Cardiologist",
-    experience: "20 years",
-    rating: 4.8,
-    reviews: 412,
-    availability: "Available Tomorrow",
-    fee: "₹800",
-    icon: Heart,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
-  },
-  {
-    id: 3,
-    name: "Dr. Ananya Patel",
-    specialty: "Neurologist",
-    experience: "12 years",
-    rating: 4.7,
-    reviews: 198,
-    availability: "Available Today",
-    fee: "₹750",
-    icon: Brain,
-    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face",
-  },
-  {
-    id: 4,
-    name: "Dr. Vikram Singh",
-    specialty: "Orthopedic",
-    experience: "18 years",
-    rating: 4.9,
-    reviews: 356,
-    availability: "Available Today",
-    fee: "₹700",
-    icon: Bone,
-    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face",
-  },
-  {
-    id: 5,
-    name: "Dr. Meera Gupta",
-    specialty: "Ophthalmologist",
-    experience: "10 years",
-    rating: 4.6,
-    reviews: 145,
-    availability: "Available Tomorrow",
-    fee: "₹600",
-    icon: Eye,
-    image: "https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=200&h=200&fit=crop&crop=face",
-  },
-  {
-    id: 6,
-    name: "Dr. Sanjay Verma",
-    specialty: "Pediatrician",
-    experience: "14 years",
-    rating: 4.8,
-    reviews: 267,
-    availability: "Available Today",
-    fee: "₹550",
-    icon: Baby,
-    image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&crop=face",
-  },
-];
+import { useAllDoctors, DoctorProfile } from "@/hooks/useDoctorProfile";
+import { createAppointment } from "@/hooks/useAppointments";
+import { Video, Star, Clock, Calendar as CalendarIcon, Stethoscope, Activity, User, ExternalLink } from "lucide-react";
+import { format } from "date-fns";
 
 const timeSlots = [
   "09:00 AM",
@@ -100,13 +28,15 @@ const timeSlots = [
 
 const Consultancy = () => {
   const [user, setUser] = useState<any>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<typeof doctors[0] | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<(DoctorProfile & { full_name?: string }) | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [isBooking, setIsBooking] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bookedAppointment, setBookedAppointment] = useState<{ meetLink: string; date: string; time: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { doctors, loading: doctorsLoading } = useAllDoctors();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -119,7 +49,7 @@ const Consultancy = () => {
   }, [navigate]);
 
   const handleBookAppointment = async () => {
-    if (!selectedDate || !selectedTime) {
+    if (!selectedDate || !selectedTime || !selectedDoctor || !user) {
       toast({
         title: "Please select date and time",
         description: "Choose your preferred appointment slot",
@@ -130,24 +60,47 @@ const Consultancy = () => {
 
     setIsBooking(true);
 
-    // Simulate booking process
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      
+      const appointment = await createAppointment(
+        user.id,
+        selectedDoctor.id,
+        formattedDate,
+        selectedTime
+      );
 
-    // Generate Google Meet link (in production, this would integrate with Google Calendar API)
-    const meetLink = `https://meet.google.com/sehat-${Date.now().toString(36)}`;
+      setBookedAppointment({
+        meetLink: appointment.google_meet_link || "",
+        date: format(selectedDate, "PPP"),
+        time: selectedTime,
+      });
 
-    toast({
-      title: "Appointment Booked Successfully!",
-      description: `Your consultation with ${selectedDoctor?.name} is confirmed for ${selectedDate.toLocaleDateString()} at ${selectedTime}`,
-    });
+      toast({
+        title: "Appointment Booked Successfully!",
+        description: `Your consultation with Dr. ${selectedDoctor.full_name} is confirmed for ${format(selectedDate, "PPP")} at ${selectedTime}`,
+      });
 
-    // Open Google Meet link
-    window.open(meetLink, "_blank");
+    } catch (error: any) {
+      toast({
+        title: "Booking Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
-    setIsBooking(false);
+  const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedDate(undefined);
     setSelectedTime("");
+    setBookedAppointment(null);
+  };
+
+  const getSpecialtyIcon = (specialty: string) => {
+    return Stethoscope;
   };
 
   return (
@@ -165,145 +118,235 @@ const Consultancy = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {doctors.map((doctor) => {
-              const IconComponent = doctor.icon;
-              return (
-                <Card key={doctor.id} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start gap-4">
-                      <img
-                        src={doctor.image}
-                        alt={doctor.name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
-                      />
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{doctor.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1 mt-1">
-                          <IconComponent className="h-4 w-4" />
-                          {doctor.specialty}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                        <span className="font-semibold">{doctor.rating}</span>
-                        <span className="text-muted-foreground">({doctor.reviews})</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {doctor.experience}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Badge variant={doctor.availability.includes("Today") ? "default" : "secondary"}>
-                        {doctor.availability}
-                      </Badge>
-                      <span className="font-bold text-primary">{doctor.fee}</span>
-                    </div>
-
-                    <Dialog open={dialogOpen && selectedDoctor?.id === doctor.id} onOpenChange={(open) => {
-                      setDialogOpen(open);
-                      if (open) setSelectedDoctor(doctor);
-                    }}>
-                      <DialogTrigger asChild>
-                        <Button className="w-full bg-gradient-primary hover:opacity-90" onClick={() => setSelectedDoctor(doctor)}>
-                          <Video className="mr-2 h-4 w-4" />
-                          Book Consultation
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[500px]">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-3">
-                            <img
-                              src={doctor.image}
-                              alt={doctor.name}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                            <div>
-                              <div>{doctor.name}</div>
-                              <div className="text-sm font-normal text-muted-foreground">
-                                {doctor.specialty}
-                              </div>
-                            </div>
-                          </DialogTitle>
-                          <DialogDescription>
-                            Select your preferred date and time for the video consultation.
-                          </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="space-y-4 py-4">
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">
-                              <CalendarIcon className="h-4 w-4 inline mr-2" />
-                              Select Date
-                            </label>
-                            <Calendar
-                              mode="single"
-                              selected={selectedDate}
-                              onSelect={setSelectedDate}
-                              disabled={(date) => date < new Date() || date > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
-                              className="rounded-md border"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">
-                              <Clock className="h-4 w-4 inline mr-2" />
-                              Select Time Slot
-                            </label>
-                            <Select value={selectedTime} onValueChange={setSelectedTime}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Choose a time slot" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {timeSlots.map((slot) => (
-                                  <SelectItem key={slot} value={slot}>
-                                    {slot}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="bg-muted/50 rounded-lg p-4">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Consultation Fee</span>
-                              <span className="font-semibold">{doctor.fee}</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                              You will receive a Google Meet link after booking.
-                            </p>
-                          </div>
+          {doctorsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Activity className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : doctors.length === 0 ? (
+            <Card className="max-w-md mx-auto">
+              <CardContent className="p-8 text-center">
+                <Stethoscope className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">No Doctors Available</h3>
+                <p className="text-muted-foreground">
+                  No doctors have registered yet. Check back soon!
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {doctors.map((doctor) => {
+                const IconComponent = getSpecialtyIcon(doctor.specialty);
+                return (
+                  <Card key={doctor.id} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center">
+                          <User className="h-8 w-8 text-white" />
                         </div>
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">Dr. {doctor.full_name}</CardTitle>
+                          <CardDescription className="flex items-center gap-1 mt-1">
+                            <IconComponent className="h-4 w-4" />
+                            {doctor.specialty}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {doctor.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {doctor.bio}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          <span className="font-semibold">{doctor.rating || "New"}</span>
+                          {doctor.total_reviews && doctor.total_reviews > 0 && (
+                            <span className="text-muted-foreground">({doctor.total_reviews})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          {doctor.experience_years} years
+                        </div>
+                      </div>
 
-                        <DialogFooter>
-                          <Button
-                            onClick={handleBookAppointment}
-                            disabled={isBooking || !selectedDate || !selectedTime}
-                            className="w-full bg-gradient-primary hover:opacity-90"
+                      <div className="flex items-center justify-between">
+                        <Badge variant={doctor.is_available ? "default" : "secondary"}>
+                          {doctor.is_available ? "Available" : "Unavailable"}
+                        </Badge>
+                        <span className="font-bold text-primary">₹{doctor.consultation_fee}</span>
+                      </div>
+
+                      <Dialog open={dialogOpen && selectedDoctor?.id === doctor.id} onOpenChange={(open) => {
+                        if (open) {
+                          setSelectedDoctor(doctor);
+                          setDialogOpen(true);
+                        } else {
+                          handleCloseDialog();
+                        }
+                      }}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            className="w-full bg-gradient-primary hover:opacity-90" 
+                            disabled={!doctor.is_available}
+                            onClick={() => setSelectedDoctor(doctor)}
                           >
-                            {isBooking ? (
-                              "Booking..."
-                            ) : (
-                              <>
-                                <Video className="mr-2 h-4 w-4" />
-                                Confirm & Join via Google Meet
-                              </>
-                            )}
+                            <Video className="mr-2 h-4 w-4" />
+                            Book Consultation
                           </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px]">
+                          {bookedAppointment ? (
+                            <>
+                              <DialogHeader>
+                                <DialogTitle className="text-center text-green-600">
+                                  🎉 Appointment Confirmed!
+                                </DialogTitle>
+                                <DialogDescription className="text-center">
+                                  Your consultation has been scheduled successfully.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-6">
+                                <div className="bg-muted rounded-lg p-4 space-y-3">
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Doctor</span>
+                                    <span className="font-medium">Dr. {selectedDoctor?.full_name}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Date</span>
+                                    <span className="font-medium">{bookedAppointment.date}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Time</span>
+                                    <span className="font-medium">{bookedAppointment.time}</span>
+                                  </div>
+                                </div>
+
+                                <div className="bg-primary/10 rounded-lg p-4">
+                                  <p className="text-sm font-medium mb-2">Your Google Meet Link:</p>
+                                  <div className="flex items-center gap-2">
+                                    <code className="flex-1 text-xs bg-background rounded px-2 py-1 break-all">
+                                      {bookedAppointment.meetLink}
+                                    </code>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => window.open(bookedAppointment.meetLink, "_blank")}
+                                    >
+                                      <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                <Button
+                                  className="w-full bg-gradient-primary"
+                                  onClick={() => window.open(bookedAppointment.meetLink, "_blank")}
+                                >
+                                  <Video className="mr-2 h-4 w-4" />
+                                  Join Google Meet
+                                </Button>
+                              </div>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={handleCloseDialog} className="w-full">
+                                  Close
+                                </Button>
+                              </DialogFooter>
+                            </>
+                          ) : (
+                            <>
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center">
+                                    <User className="h-6 w-6 text-white" />
+                                  </div>
+                                  <div>
+                                    <div>Dr. {doctor.full_name}</div>
+                                    <div className="text-sm font-normal text-muted-foreground">
+                                      {doctor.specialty}
+                                    </div>
+                                  </div>
+                                </DialogTitle>
+                                <DialogDescription>
+                                  Select your preferred date and time for the video consultation.
+                                </DialogDescription>
+                              </DialogHeader>
+
+                              <div className="space-y-4 py-4">
+                                <div>
+                                  <label className="text-sm font-medium mb-2 block">
+                                    <CalendarIcon className="h-4 w-4 inline mr-2" />
+                                    Select Date
+                                  </label>
+                                  <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={setSelectedDate}
+                                    disabled={(date) => date < new Date() || date > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
+                                    className="rounded-md border"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-medium mb-2 block">
+                                    <Clock className="h-4 w-4 inline mr-2" />
+                                    Select Time Slot
+                                  </label>
+                                  <Select value={selectedTime} onValueChange={setSelectedTime}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choose a time slot" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {timeSlots.map((slot) => (
+                                        <SelectItem key={slot} value={slot}>
+                                          {slot}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="bg-muted/50 rounded-lg p-4">
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Consultation Fee</span>
+                                    <span className="font-semibold">₹{doctor.consultation_fee}</span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    You will receive a Google Meet link after booking.
+                                  </p>
+                                </div>
+                              </div>
+
+                              <DialogFooter>
+                                <Button
+                                  onClick={handleBookAppointment}
+                                  disabled={isBooking || !selectedDate || !selectedTime}
+                                  className="w-full bg-gradient-primary hover:opacity-90"
+                                >
+                                  {isBooking ? (
+                                    <>
+                                      <Activity className="mr-2 h-4 w-4 animate-spin" />
+                                      Booking...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Video className="mr-2 h-4 w-4" />
+                                      Confirm & Get Meet Link
+                                    </>
+                                  )}
+                                </Button>
+                              </DialogFooter>
+                            </>
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

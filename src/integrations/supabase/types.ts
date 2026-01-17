@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          created_at: string
+          doctor_id: string
+          google_calendar_event_id: string | null
+          google_meet_link: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          created_at?: string
+          doctor_id: string
+          google_calendar_event_id?: string | null
+          google_meet_link?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          created_at?: string
+          doctor_id?: string
+          google_calendar_event_id?: string | null
+          google_meet_link?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bmi_records: {
         Row: {
           age: number
@@ -47,6 +97,51 @@ export type Database = {
           id?: string
           user_id?: string
           weight?: number
+        }
+        Relationships: []
+      }
+      doctor_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          consultation_fee: number
+          created_at: string
+          experience_years: number
+          id: string
+          is_available: boolean
+          rating: number | null
+          specialty: string
+          total_reviews: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          consultation_fee?: number
+          created_at?: string
+          experience_years?: number
+          id?: string
+          is_available?: boolean
+          rating?: number | null
+          specialty?: string
+          total_reviews?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          consultation_fee?: number
+          created_at?: string
+          experience_years?: number
+          id?: string
+          is_available?: boolean
+          rating?: number | null
+          specialty?: string
+          total_reviews?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

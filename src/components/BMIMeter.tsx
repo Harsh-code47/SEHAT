@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface BMIMeterProps {
   bmi: number;
@@ -7,6 +7,32 @@ interface BMIMeterProps {
 
 export const BMIMeter = ({ bmi, category }: BMIMeterProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [animatedBmi, setAnimatedBmi] = useState(0);
+
+  // Animate the BMI value
+  useEffect(() => {
+    const targetBmi = Math.min(Math.max(bmi, 0), 40);
+    const duration = 1500; // 1.5 seconds
+    const startTime = performance.now();
+    const startBmi = animatedBmi;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+      const currentBmi = startBmi + (targetBmi - startBmi) * easeOutCubic;
+      
+      setAnimatedBmi(currentBmi);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [bmi]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,7 +58,7 @@ export const BMIMeter = ({ bmi, category }: BMIMeterProps) => {
 
     // Define BMI zones with colors
     const zones = [
-      { min: 0, max: 18.5, color: "#f59e0b", label: "Underweight" },
+      { min: 0, max: 18.5, color: "#3b82f6", label: "Underweight" },
       { min: 18.5, max: 25, color: "#22c55e", label: "Normal" },
       { min: 25, max: 30, color: "#f59e0b", label: "Overweight" },
       { min: 30, max: 40, color: "#ef4444", label: "Obese" },
@@ -85,8 +111,8 @@ export const BMIMeter = ({ bmi, category }: BMIMeterProps) => {
       ctx.fillText(tick.toString(), labelX, labelY);
     });
 
-    // Draw needle
-    const clampedBmi = Math.min(Math.max(bmi, 0), 40);
+    // Draw needle with animation
+    const clampedBmi = Math.min(Math.max(animatedBmi, 0), 40);
     const needleAngle = startAngle + (clampedBmi / totalRange) * Math.PI;
     const needleLength = radius - 40;
 
@@ -109,23 +135,38 @@ export const BMIMeter = ({ bmi, category }: BMIMeterProps) => {
     ctx.stroke();
     ctx.restore();
 
+    // Draw needle tip (triangle pointer)
+    const tipLength = 15;
+    const tipWidth = 8;
+    ctx.save();
+    ctx.translate(needleX, needleY);
+    ctx.rotate(needleAngle + Math.PI / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, -tipLength);
+    ctx.lineTo(-tipWidth / 2, 0);
+    ctx.lineTo(tipWidth / 2, 0);
+    ctx.closePath();
+    ctx.fillStyle = foregroundColor;
+    ctx.fill();
+    ctx.restore();
+
     // Draw center circle
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 12, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, 15, 0, 2 * Math.PI);
     ctx.fillStyle = primaryColor;
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
     ctx.fillStyle = foregroundColor;
     ctx.fill();
 
-  }, [bmi]);
+  }, [animatedBmi]);
 
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
       case "underweight":
-        return "text-amber-500";
+        return "text-blue-500";
       case "normal":
         return "text-green-500";
       case "overweight":
@@ -146,7 +187,7 @@ export const BMIMeter = ({ bmi, category }: BMIMeterProps) => {
         className="max-w-full"
       />
       <div className="text-center mt-4">
-        <div className="text-5xl font-bold text-primary">{bmi.toFixed(1)}</div>
+        <div className="text-5xl font-bold text-primary">{animatedBmi.toFixed(1)}</div>
         <div className={`text-xl font-semibold mt-1 ${getCategoryColor(category)}`}>
           {category}
         </div>
