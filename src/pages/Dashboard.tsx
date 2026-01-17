@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DoctorProfileForm } from "@/components/DoctorProfileForm";
+import { useDoctorProfile } from "@/hooks/useDoctorProfile";
+import { useAppointments } from "@/hooks/useAppointments";
 import { 
   FileText, 
   Calculator, 
@@ -12,8 +16,12 @@ import {
   ClipboardList,
   Stethoscope,
   TrendingUp,
-  Calendar
+  Calendar,
+  Video,
+  Clock,
+  CheckCircle
 } from "lucide-react";
+import { format } from "date-fns";
 
 type UserRole = "user" | "doctor";
 
@@ -78,16 +86,16 @@ const Dashboard = () => {
           </h1>
           <p className="text-muted-foreground">
             {userRole === "doctor" 
-              ? "Manage your patients and review their health reports" 
+              ? "Manage your profile and patient consultations" 
               : "Track your health metrics and analyze your reports"}
           </p>
         </div>
 
         {/* Role-based Dashboard Content */}
         {userRole === "doctor" ? (
-          <DoctorDashboard />
+          <DoctorDashboard user={user} />
         ) : (
-          <PatientDashboard />
+          <PatientDashboard user={user} />
         )}
       </main>
 
@@ -101,7 +109,10 @@ const Dashboard = () => {
   );
 };
 
-const PatientDashboard = () => {
+const PatientDashboard = ({ user }: { user: any }) => {
+  const { appointments, loading: appointmentsLoading } = useAppointments(user?.id, "patient");
+  const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
+
   return (
     <div className="space-y-8">
       {/* Quick Actions */}
@@ -132,38 +143,81 @@ const PatientDashboard = () => {
             </Link>
           </Card>
           
-          <Card className="hover:border-accent transition-colors">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-lg bg-accent flex items-center justify-center mb-4">
-                <TrendingUp className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="font-semibold">Health Trends</h3>
-              <p className="text-sm text-muted-foreground mt-1">View your health history</p>
-            </CardContent>
+          <Card className="hover:border-accent transition-colors cursor-pointer">
+            <Link to="/consultancy">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="h-12 w-12 rounded-lg bg-accent flex items-center justify-center mb-4">
+                  <Stethoscope className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold">Consult Doctor</h3>
+                <p className="text-sm text-muted-foreground mt-1">Book video consultations</p>
+              </CardContent>
+            </Link>
           </Card>
           
-          <Card className="hover:border-primary transition-colors">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
-                <Calendar className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="font-semibold">Appointments</h3>
-              <p className="text-sm text-muted-foreground mt-1">Schedule doctor visits</p>
-            </CardContent>
+          <Card className="hover:border-primary transition-colors cursor-pointer">
+            <Link to="/prescription">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
+                  <ClipboardList className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold">Prescriptions</h3>
+                <p className="text-sm text-muted-foreground mt-1">View your prescriptions</p>
+              </CardContent>
+            </Link>
           </Card>
         </div>
       </section>
 
-      {/* Recent Activity */}
+      {/* Upcoming Appointments */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+        <h2 className="text-xl font-semibold mb-4">Upcoming Appointments</h2>
         <Card>
           <CardContent className="p-6">
-            <div className="text-center text-muted-foreground py-8">
-              <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No recent activity yet</p>
-              <p className="text-sm mt-1">Start by analyzing a report or calculating your BMI</p>
-            </div>
+            {appointmentsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Activity className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : upcomingAppointments.length > 0 ? (
+              <div className="space-y-4">
+                {upcomingAppointments.slice(0, 3).map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {format(new Date(appointment.appointment_date), "PPP")}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {appointment.appointment_time}
+                        </p>
+                      </div>
+                    </div>
+                    {appointment.google_meet_link && (
+                      <Button
+                        size="sm"
+                        className="bg-gradient-primary"
+                        onClick={() => window.open(appointment.google_meet_link!, "_blank")}
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        Join Meet
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-8">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No upcoming appointments</p>
+                <p className="text-sm mt-1">Book a consultation with a doctor</p>
+                <Button asChild className="mt-4">
+                  <Link to="/consultancy">Find a Doctor</Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -171,47 +225,46 @@ const PatientDashboard = () => {
   );
 };
 
-const DoctorDashboard = () => {
+const DoctorDashboard = ({ user }: { user: any }) => {
+  const { profile, loading: profileLoading, refetch } = useDoctorProfile(user?.id);
+  const { appointments, loading: appointmentsLoading } = useAppointments(user?.id, "doctor");
+  
+  const todayAppointments = appointments.filter(a => {
+    const today = new Date().toISOString().split('T')[0];
+    return a.appointment_date === today && a.status === "scheduled";
+  });
+
+  const pendingAppointments = appointments.filter(a => a.status === "scheduled");
+  const completedAppointments = appointments.filter(a => a.status === "completed");
+
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Activity className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
+      {/* Doctor Profile Form */}
+      <section>
+        <DoctorProfileForm
+          initialData={profile ? {
+            id: profile.id,
+            specialty: profile.specialty,
+            experience_years: profile.experience_years,
+            consultation_fee: profile.consultation_fee,
+            bio: profile.bio || "",
+            is_available: profile.is_available,
+          } : undefined}
+          userId={user?.id}
+          onSave={refetch}
+        />
+      </section>
+
       {/* Stats Overview */}
       <section className="grid md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Patients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">0</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Reports Reviewed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-secondary" />
-              <span className="text-2xl font-bold">0</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reviews</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-accent" />
-              <span className="text-2xl font-bold">0</span>
-            </div>
-          </CardContent>
-        </Card>
-        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Today's Appointments</CardTitle>
@@ -219,63 +272,137 @@ const DoctorDashboard = () => {
           <CardContent>
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">0</span>
+              <span className="text-2xl font-bold">{todayAppointments.length}</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Consultations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-amber-500" />
+              <span className="text-2xl font-bold">{pendingAppointments.length}</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span className="text-2xl font-bold">{completedAppointments.length}</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Consultation Fee</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">₹{profile?.consultation_fee || 0}</span>
             </div>
           </CardContent>
         </Card>
       </section>
 
-      {/* Quick Actions */}
+      {/* Today's Appointments */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card className="hover:border-primary transition-colors cursor-pointer">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="font-semibold">View Patients</h3>
-              <p className="text-sm text-muted-foreground mt-1">Manage your patient list</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:border-secondary transition-colors cursor-pointer">
-            <Link to="/report-analyzer">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="h-12 w-12 rounded-lg bg-gradient-warm flex items-center justify-center mb-4">
-                  <ClipboardList className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="font-semibold">Review Reports</h3>
-                <p className="text-sm text-muted-foreground mt-1">Analyze patient reports</p>
-              </CardContent>
-            </Link>
-          </Card>
-          
-          <Card className="hover:border-accent transition-colors">
-            <CardContent className="p-6 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-lg bg-accent flex items-center justify-center mb-4">
-                <Stethoscope className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="font-semibold">Consultations</h3>
-              <p className="text-sm text-muted-foreground mt-1">Manage appointments</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Recent Patients */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Recent Patients</h2>
+        <h2 className="text-xl font-semibold mb-4">Today's Appointments</h2>
         <Card>
           <CardContent className="p-6">
-            <div className="text-center text-muted-foreground py-8">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No patients yet</p>
-              <p className="text-sm mt-1">Patients will appear here when they share their reports with you</p>
-            </div>
+            {appointmentsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Activity className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : todayAppointments.length > 0 ? (
+              <div className="space-y-4">
+                {todayAppointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Patient Consultation</p>
+                        <p className="text-sm text-muted-foreground">
+                          {appointment.appointment_time}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge>{appointment.status}</Badge>
+                      {appointment.google_meet_link && (
+                        <Button
+                          size="sm"
+                          className="bg-gradient-primary"
+                          onClick={() => window.open(appointment.google_meet_link!, "_blank")}
+                        >
+                          <Video className="h-4 w-4 mr-2" />
+                          Join
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-8">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No appointments scheduled for today</p>
+                <p className="text-sm mt-1">Your upcoming appointments will appear here</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>
+
+      {/* All Upcoming Appointments */}
+      {pendingAppointments.length > 0 && (
+        <section>
+          <h2 className="text-xl font-semibold mb-4">All Upcoming Appointments</h2>
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {pendingAppointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {format(new Date(appointment.appointment_date), "PPP")}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {appointment.appointment_time}
+                        </p>
+                      </div>
+                    </div>
+                    {appointment.google_meet_link && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(appointment.google_meet_link!, "_blank")}
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        Join Meet
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
     </div>
   );
 };
