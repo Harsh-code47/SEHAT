@@ -1,4 +1,7 @@
 project_id = "xfikcfadomrgdubzcqth"
 
 [functions.analyze-report]
-verify_jwt = true
+verify_jwt = false
+
+[functions.book-appointment]
+verify_jwt = false
