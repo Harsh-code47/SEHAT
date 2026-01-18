@@ -92,25 +92,49 @@ export const createAppointment = async (
   date: string,
   time: string
 ) => {
-  // Generate a Google Meet link
-  const meetCode = `sehat-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`;
-  const googleMeetLink = `https://meet.google.com/${meetCode}`;
+  // Use edge function for secure server-side booking with validation
+  const { data: sessionData } = await supabase.auth.getSession();
+  
+  if (!sessionData?.session?.access_token) {
+    throw new Error("Please log in to book an appointment");
+  }
 
-  const { data, error } = await supabase
-    .from("appointments")
-    .insert({
-      patient_id: patientId,
-      doctor_id: doctorId,
-      appointment_date: date,
-      appointment_time: time,
-      google_meet_link: googleMeetLink,
-      status: "scheduled",
-    })
-    .select()
-    .single();
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/book-appointment`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionData.session.access_token}`,
+      },
+      body: JSON.stringify({
+        doctor_id: doctorId,
+        appointment_date: date,
+        appointment_time: time,
+      }),
+    }
+  );
 
-  if (error) throw error;
-  return data;
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to book appointment');
+  }
+
+  // Return data in the format expected by the UI
+  return {
+    id: result.appointment.id,
+    patient_id: patientId,
+    doctor_id: doctorId,
+    appointment_date: result.appointment.appointment_date,
+    appointment_time: result.appointment.appointment_time,
+    google_meet_link: result.appointment.meeting_link,
+    status: result.appointment.status,
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    google_calendar_event_id: null,
+  };
 };
 
 export const updateAppointmentStatus = async (
