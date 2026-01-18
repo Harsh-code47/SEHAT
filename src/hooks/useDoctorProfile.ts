@@ -12,6 +12,7 @@ export interface DoctorProfile {
   is_available: boolean;
   rating: number | null;
   total_reviews: number | null;
+  display_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -57,7 +58,7 @@ export const useAllDoctors = () => {
 
   const fetchDoctors = async () => {
     try {
-      // Fetch doctor profiles
+      // Fetch doctor profiles with display_name
       const { data: doctorProfiles, error: profileError } = await supabase
         .from("doctor_profiles")
         .select("*")
@@ -65,24 +66,12 @@ export const useAllDoctors = () => {
 
       if (profileError) throw profileError;
 
-      // Fetch profiles for doctor names
       if (doctorProfiles && doctorProfiles.length > 0) {
-        const userIds = doctorProfiles.map((d) => d.user_id);
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", userIds);
-
-        if (profilesError) throw profilesError;
-
-        // Merge doctor profiles with user names
-        const mergedDoctors = doctorProfiles.map((doctor) => {
-          const userProfile = profiles?.find((p) => p.id === doctor.user_id);
-          return {
-            ...doctor,
-            full_name: userProfile?.full_name || "Doctor",
-          };
-        });
+        // Use display_name from doctor_profiles directly
+        const mergedDoctors = doctorProfiles.map((doctor) => ({
+          ...doctor,
+          full_name: doctor.display_name || "Doctor",
+        }));
 
         setDoctors(mergedDoctors);
       } else {
