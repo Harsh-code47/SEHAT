@@ -51,7 +51,7 @@ export const useDoctorProfile = (userId: string | undefined) => {
 };
 
 export const useAllDoctors = () => {
-  const [doctors, setDoctors] = useState<(DoctorProfile & { full_name?: string; email?: string })[]>([]);
+  const [doctors, setDoctors] = useState<(DoctorProfile & { full_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +70,7 @@ export const useAllDoctors = () => {
         const userIds = doctorProfiles.map((d) => d.user_id);
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, full_name, email")
+          .select("id, full_name")
           .in("id", userIds);
 
         if (profilesError) throw profilesError;
@@ -81,7 +81,6 @@ export const useAllDoctors = () => {
           return {
             ...doctor,
             full_name: userProfile?.full_name || "Doctor",
-            email: userProfile?.email,
           };
         });
 
