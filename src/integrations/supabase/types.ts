@@ -106,6 +106,7 @@ export type Database = {
           bio: string | null
           consultation_fee: number
           created_at: string
+          display_name: string | null
           experience_years: number
           id: string
           is_available: boolean
@@ -120,6 +121,7 @@ export type Database = {
           bio?: string | null
           consultation_fee?: number
           created_at?: string
+          display_name?: string | null
           experience_years?: number
           id?: string
           is_available?: boolean
@@ -134,6 +136,7 @@ export type Database = {
           bio?: string | null
           consultation_fee?: number
           created_at?: string
+          display_name?: string | null
           experience_years?: number
           id?: string
           is_available?: boolean
