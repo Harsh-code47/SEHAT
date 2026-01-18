@@ -110,10 +110,10 @@ const Consultancy = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-4 text-gradient opacity-0 animate-fade-in-down">
               Online Consultancy
             </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto opacity-0 animate-fade-in-up animate-delay-200">
               Connect with experienced doctors from the comfort of your home. Book instant video consultations via Google Meet.
             </p>
           </div>
@@ -123,9 +123,9 @@ const Consultancy = () => {
               <Activity className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : doctors.length === 0 ? (
-            <Card className="max-w-md mx-auto">
+            <Card className="max-w-md mx-auto opacity-0 animate-scale-in">
               <CardContent className="p-8 text-center">
-                <Stethoscope className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <Stethoscope className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50 animate-pulse-soft" />
                 <h3 className="text-lg font-semibold mb-2">No Doctors Available</h3>
                 <p className="text-muted-foreground">
                   No doctors have registered yet. Check back soon!
@@ -134,13 +134,17 @@ const Consultancy = () => {
             </Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {doctors.map((doctor) => {
+              {doctors.map((doctor, index) => {
                 const IconComponent = getSpecialtyIcon(doctor.specialty);
                 return (
-                  <Card key={doctor.id} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
+                  <Card 
+                    key={doctor.id} 
+                    className="card-hover border-2 opacity-0 animate-fade-in-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
                     <CardHeader className="pb-4">
                       <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center animate-pulse-soft">
                           <User className="h-8 w-8 text-white" />
                         </div>
                         <div className="flex-1">
@@ -190,7 +194,7 @@ const Consultancy = () => {
                       }}>
                         <DialogTrigger asChild>
                           <Button 
-                            className="w-full bg-gradient-primary hover:opacity-90" 
+                            className="w-full bg-gradient-primary hover:opacity-90 hover-scale btn-press transition-all duration-200" 
                             disabled={!doctor.is_available}
                             onClick={() => setSelectedDoctor(doctor)}
                           >
