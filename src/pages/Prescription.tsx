@@ -262,7 +262,7 @@ const Prescription = () => {
       {/* Footer */}
       <footer className="border-t border-border/40 py-8 mt-12">
         <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
-          © 2025 SEHAT. All Rights Reserved.
+          All Rights Reserved - SEHAT
         </div>
       </footer>
     </div>

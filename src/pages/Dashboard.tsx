@@ -102,7 +102,7 @@ const Dashboard = () => {
       {/* Footer */}
       <footer className="py-8 border-t mt-auto">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 SEHAT. All Rights Reserved.</p>
+          <p>All Rights Reserved - SEHAT</p>
         </div>
       </footer>
     </div>

@@ -136,7 +136,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="py-8 border-t">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 SEHAT. All Rights Reserved.</p>
+          <p>All Rights Reserved - SEHAT</p>
         </div>
       </footer>
     </div>
