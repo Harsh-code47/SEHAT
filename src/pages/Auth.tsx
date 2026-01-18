@@ -118,19 +118,19 @@ const Auth = () => {
         <img 
           src={authHeroImage} 
           alt="Healthy lifestyle" 
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover animate-scale-in"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <h2 className="text-3xl font-bold mb-2">Store your Medical Records</h2>
-          <p className="text-white/90">Share with your doctor from anywhere, anytime</p>
-          <div className="flex gap-2 mt-6">
+          <h2 className="text-3xl font-bold mb-2 opacity-0 animate-fade-in-up animate-delay-300">Store your Medical Records</h2>
+          <p className="text-white/90 opacity-0 animate-fade-in-up animate-delay-500">Share with your doctor from anywhere, anytime</p>
+          <div className="flex gap-2 mt-6 opacity-0 animate-fade-in animate-delay-700">
             {[1, 2, 3, 4, 5].map((i) => (
               <div 
                 key={i} 
                 className={cn(
-                  "h-1 rounded-full transition-all",
-                  i === 5 ? "w-8 bg-white" : "w-4 bg-white/50"
+                  "h-1 rounded-full transition-all duration-300",
+                  i === 5 ? "w-8 bg-white" : "w-4 bg-white/50 hover:bg-white/80"
                 )}
               />
             ))}
@@ -140,16 +140,16 @@ const Auth = () => {
 
       {/* Right Side - Auth Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12">
-        <Card className="w-full max-w-md border-0 shadow-none">
+        <Card className="w-full max-w-md border-0 shadow-none opacity-0 animate-fade-in-up">
           <CardContent className="p-0">
             {/* Logo */}
             <div className="flex justify-center items-center gap-3 mb-8">
               <img 
                 src={sehatLogo} 
                 alt="SEHAT Logo" 
-                className="h-14 w-14 rounded-lg object-contain"
+                className="h-14 w-14 rounded-lg object-contain animate-bounce-soft"
               />
-              <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <span className="text-2xl font-bold text-gradient">
                 SEHAT
               </span>
             </div>
@@ -161,9 +161,9 @@ const Auth = () => {
                   type="button"
                   onClick={() => setRole("user")}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all",
+                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all duration-300",
                     role === "user" 
-                      ? "bg-background text-foreground shadow-sm" 
+                      ? "bg-background text-foreground shadow-sm scale-[1.02]" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -174,9 +174,9 @@ const Auth = () => {
                   type="button"
                   onClick={() => setRole("doctor")}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all",
+                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all duration-300",
                     role === "doctor" 
-                      ? "bg-background text-foreground shadow-sm" 
+                      ? "bg-background text-foreground shadow-sm scale-[1.02]" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -220,7 +220,7 @@ const Auth = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-gradient-primary hover:opacity-90 text-white font-semibold"
+                    className="w-full h-12 bg-gradient-primary hover:opacity-90 text-white font-semibold hover-scale btn-press transition-all duration-200"
                     disabled={isLoading}
                   >
                     {isLoading ? "Logging in..." : `Login as ${role === "doctor" ? "Doctor" : "Patient"}`}
@@ -268,7 +268,7 @@ const Auth = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-gradient-primary hover:opacity-90 text-white font-semibold"
+                    className="w-full h-12 bg-gradient-primary hover:opacity-90 text-white font-semibold hover-scale btn-press transition-all duration-200"
                     disabled={isLoading}
                   >
                     {isLoading ? "Creating account..." : `Sign Up as ${role === "doctor" ? "Doctor" : "Patient"}`}
