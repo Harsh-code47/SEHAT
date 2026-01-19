@@ -53,17 +53,17 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { reportText, extractTextFromImage, imageData, fileName } = body;
 
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: 'AI service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Handle text extraction from image/PDF
     if (extractTextFromImage && imageData) {
       console.log('Extracting text from file:', fileName);
-      
-      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-      if (!LOVABLE_API_KEY) {
-        return new Response(
-          JSON.stringify({ error: 'AI service not configured' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
 
       try {
         const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
                 content: [
                   {
                     type: 'text',
-                    text: `Extract ALL text from this medical report image/document. Focus on extracting test names, values, units, and reference ranges. Format the output as plain text with each test on a new line in the format: "Test Name: Value Unit (Reference: range)". Include all medical values like Hemoglobin, WBC, Glucose, Cholesterol, HDL, LDL, Triglycerides, Platelet count, and any other lab values present.`,
+                    text: `Extract ALL text from this medical report image/document. Include every single test name, value, unit, and reference range exactly as shown. Format each test on a new line. Be comprehensive and include ALL tests visible in the report.`,
                   },
                   {
                     type: 'image_url',
@@ -133,167 +133,107 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Analyzing report text...');
+    console.log('Analyzing report text with AI...');
 
-    // Reference ranges for common tests
-    const referenceRanges: Record<string, { min: number; max: number; unit: string }> = {
-      hemoglobin: { min: 13, max: 17, unit: 'g/dL' },
-      wbc: { min: 4000, max: 11000, unit: 'cells/μL' },
-      platelet: { min: 150000, max: 400000, unit: 'cells/μL' },
-      glucose: { min: 70, max: 100, unit: 'mg/dL' },
-      cholesterol: { min: 0, max: 200, unit: 'mg/dL' },
-      hdl: { min: 40, max: 999, unit: 'mg/dL' },
-      ldl: { min: 0, max: 100, unit: 'mg/dL' },
-      triglycerides: { min: 0, max: 150, unit: 'mg/dL' },
-    };
+    // Use AI to extract ALL test values with their reference ranges from the report
+    try {
+      const analysisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a medical report analyzer. Extract ALL test results from the report and return structured JSON.
+              
+For EACH test found, extract:
+- name: The test name exactly as shown
+- value: The numeric value (just the number)
+- unit: The unit of measurement
+- referenceRange: The reference/normal range exactly as shown in the report
+- minNormal: The minimum normal value (parse from reference range)
+- maxNormal: The maximum normal value (parse from reference range)
+- status: "Normal" if value is within range, "Low" if below, "High" if above
 
-    // Extract test values using regex and NER-like patterns
-    const tests: TestResult[] = [];
-    const lines = reportText.split('\n');
+IMPORTANT: 
+- Extract ALL tests, not just common ones
+- Use the reference ranges FROM THE REPORT, not standard values
+- If reference range shows "<X", use 0 as min and X as max
+- If reference range shows ">X", use X as min and 9999 as max
+- If reference range shows "X-Y", use X as min and Y as max`,
+            },
+            {
+              role: 'user',
+              content: `Analyze this medical report and extract ALL test values with their reference ranges as shown in the report:\n\n${reportText}`,
+            },
+          ],
+          tools: [
+            {
+              type: 'function',
+              function: {
+                name: 'report_analysis',
+                description: 'Return the complete analysis of all medical tests',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    tests: {
+                      type: 'array',
+                      description: 'All tests found in the report',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string', description: 'Test name' },
+                          value: { type: 'number', description: 'Numeric test value' },
+                          unit: { type: 'string', description: 'Unit of measurement' },
+                          referenceRange: { type: 'string', description: 'Reference range as shown in report' },
+                          minNormal: { type: 'number', description: 'Minimum normal value' },
+                          maxNormal: { type: 'number', description: 'Maximum normal value' },
+                          status: { type: 'string', enum: ['Normal', 'Low', 'High'], description: 'Status based on reference range' },
+                        },
+                        required: ['name', 'value', 'unit', 'referenceRange', 'minNormal', 'maxNormal', 'status'],
+                      },
+                    },
+                    summary: { type: 'string', description: 'Brief summary of overall findings' },
+                  },
+                  required: ['tests', 'summary'],
+                },
+              },
+            },
+          ],
+          tool_choice: { type: 'function', function: { name: 'report_analysis' } },
+        }),
+      });
 
-    for (const line of lines) {
-      // Hemoglobin pattern
-      const hbMatch = line.match(/hemoglobin[:\s]+(\d+\.?\d*)\s*(g\/dL)?/i);
-      if (hbMatch) {
-        const value = parseFloat(hbMatch[1]);
-        const ref = referenceRanges.hemoglobin;
-        tests.push({
-          name: 'Hemoglobin',
-          value,
-          unit: ref.unit,
-          referenceRange: `${ref.min}-${ref.max} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value < ref.min ? 'Low' : value > ref.max ? 'High' : 'Normal',
-        });
+      if (!analysisResponse.ok) {
+        const errorText = await analysisResponse.text();
+        console.error('AI analysis error:', errorText);
+        throw new Error('Failed to analyze report');
       }
 
-      // WBC pattern
-      const wbcMatch = line.match(/(?:wbc|white blood cell)[:\s]+(\d+\.?\d*)\s*(?:cells\/μL)?/i);
-      if (wbcMatch) {
-        const value = parseFloat(wbcMatch[1]);
-        const ref = referenceRanges.wbc;
-        tests.push({
-          name: 'WBC',
-          value,
-          unit: ref.unit,
-          referenceRange: `${ref.min}-${ref.max} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value < ref.min ? 'Low' : value > ref.max ? 'High' : 'Normal',
-        });
+      const analysisData = await analysisResponse.json();
+      
+      // Extract the tool call result
+      const toolCall = analysisData.choices[0]?.message?.tool_calls?.[0];
+      if (!toolCall || toolCall.function.name !== 'report_analysis') {
+        throw new Error('Invalid AI response format');
       }
 
-      // Glucose pattern
-      const glucoseMatch = line.match(/glucose[:\s]+(\d+\.?\d*)\s*(?:mg\/dL)?/i);
-      if (glucoseMatch) {
-        const value = parseFloat(glucoseMatch[1]);
-        const ref = referenceRanges.glucose;
-        tests.push({
-          name: 'Glucose',
-          value,
-          unit: ref.unit,
-          referenceRange: `${ref.min}-${ref.max} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value < ref.min ? 'Low' : value > ref.max ? 'High' : 'Normal',
-        });
-      }
+      const parsedResult = JSON.parse(toolCall.function.arguments);
+      const tests = parsedResult.tests || [];
+      const summary = parsedResult.summary || '';
 
-      // Cholesterol pattern
-      const cholMatch = line.match(/cholesterol[:\s]+(\d+\.?\d*)\s*(?:mg\/dL)?/i);
-      if (cholMatch) {
-        const value = parseFloat(cholMatch[1]);
-        const ref = referenceRanges.cholesterol;
-        tests.push({
-          name: 'Cholesterol',
-          value,
-          unit: ref.unit,
-          referenceRange: `<${ref.max} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value > ref.max ? 'High' : 'Normal',
-        });
-      }
+      console.log(`Extracted ${tests.length} tests from report`);
 
-      // HDL pattern
-      const hdlMatch = line.match(/hdl[:\s]+(\d+\.?\d*)\s*(?:mg\/dL)?/i);
-      if (hdlMatch) {
-        const value = parseFloat(hdlMatch[1]);
-        const ref = referenceRanges.hdl;
-        tests.push({
-          name: 'HDL',
-          value,
-          unit: ref.unit,
-          referenceRange: `>${ref.min} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value < ref.min ? 'Low' : 'Normal',
-        });
-      }
+      // Generate explanation for abnormal values
+      const abnormalTests = tests.filter((t: any) => t.status !== 'Normal');
+      let explanation = '';
 
-      // LDL pattern
-      const ldlMatch = line.match(/ldl[:\s]+(\d+\.?\d*)\s*(?:mg\/dL)?/i);
-      if (ldlMatch) {
-        const value = parseFloat(ldlMatch[1]);
-        const ref = referenceRanges.ldl;
-        tests.push({
-          name: 'LDL',
-          value,
-          unit: ref.unit,
-          referenceRange: `<${ref.max} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value > ref.max ? 'High' : 'Normal',
-        });
-      }
-
-      // Triglycerides pattern
-      const trigMatch = line.match(/triglycerides?[:\s]+(\d+\.?\d*)\s*(?:mg\/dL)?/i);
-      if (trigMatch) {
-        const value = parseFloat(trigMatch[1]);
-        const ref = referenceRanges.triglycerides;
-        tests.push({
-          name: 'Triglycerides',
-          value,
-          unit: ref.unit,
-          referenceRange: `<${ref.max} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value > ref.max ? 'High' : 'Normal',
-        });
-      }
-
-      // Platelet pattern
-      const plateletMatch = line.match(/platelet[:\s]+(\d+\.?\d*)\s*(?:cells\/μL)?/i);
-      if (plateletMatch) {
-        const value = parseFloat(plateletMatch[1]);
-        const ref = referenceRanges.platelet;
-        tests.push({
-          name: 'Platelet',
-          value,
-          unit: ref.unit,
-          referenceRange: `${ref.min}-${ref.max} ${ref.unit}`,
-          minNormal: ref.min,
-          maxNormal: ref.max,
-          status: value < ref.min ? 'Low' : value > ref.max ? 'High' : 'Normal',
-        });
-      }
-    }
-
-    // Generate AI explanation using Lovable AI
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    
-    let explanation = '';
-    const abnormalTests = tests.filter(t => t.status !== 'Normal');
-    
-    if (LOVABLE_API_KEY && abnormalTests.length > 0) {
-      try {
-        const abnormalDescription = abnormalTests.map(t => 
-          `${t.name}: ${t.value} ${t.unit} (${t.status}, Normal: ${t.referenceRange})`
-        ).join(', ');
-
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      if (abnormalTests.length > 0) {
+        const explanationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -304,84 +244,70 @@ Deno.serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: 'You are a medical assistant helping patients understand their lab results. Provide clear, simple explanations without medical jargon. Be reassuring but accurate.',
+                content: 'You are a medical assistant helping patients understand their lab results. Provide clear, simple explanations without medical jargon. Be reassuring but accurate. Keep response under 200 words.',
               },
               {
                 role: 'user',
-                content: `Explain these abnormal lab results in simple terms: ${abnormalDescription}. What might these indicate and what should the patient do?`,
+                content: `Explain these abnormal lab results in simple terms: ${abnormalTests.map((t: any) => 
+                  `${t.name}: ${t.value} ${t.unit} (${t.status}, Normal: ${t.referenceRange})`
+                ).join(', ')}. What might these indicate and what should the patient do?`,
               },
             ],
           }),
         });
 
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
-          explanation = aiData.choices[0]?.message?.content || '';
+        if (explanationResponse.ok) {
+          const explanationData = await explanationResponse.json();
+          explanation = explanationData.choices[0]?.message?.content || '';
         }
-      } catch (aiError) {
-        console.error('AI explanation error:', aiError);
-      }
-    }
-
-    // Generate default explanation if AI fails
-    if (!explanation) {
-      if (abnormalTests.length === 0) {
-        explanation = 'All your test results are within normal ranges. This is a positive sign indicating good health in the measured areas.';
       } else {
-        explanation = `Your report shows ${abnormalTests.length} abnormal value(s). ${abnormalTests.map(t => {
-          if (t.name === 'Hemoglobin' && t.status === 'Low') {
-            return 'Low hemoglobin may indicate anemia or iron deficiency.';
-          } else if (t.name === 'Glucose' && t.status === 'High') {
-            return 'High glucose levels may indicate diabetes or prediabetes.';
-          } else if (t.name === 'Cholesterol' && t.status === 'High') {
-            return 'High cholesterol increases risk of heart disease.';
-          } else if (t.name === 'LDL' && t.status === 'High') {
-            return 'High LDL (bad cholesterol) can lead to plaque buildup in arteries.';
-          } else if (t.name === 'HDL' && t.status === 'Low') {
-            return 'Low HDL (good cholesterol) reduces protection against heart disease.';
-          } else if (t.name === 'Triglycerides' && t.status === 'High') {
-            return 'High triglycerides increase risk of heart disease and pancreatitis.';
-          }
-          return `${t.name} is ${t.status.toLowerCase()}.`;
-        }).join(' ')} Please consult your doctor for proper evaluation and treatment.`;
+        explanation = 'All your test results are within normal ranges. This is a positive sign indicating good health in the measured areas. Continue maintaining a healthy lifestyle.';
       }
+
+      // Prepare chart data
+      const chartData = tests.map((test: any) => ({
+        name: test.name,
+        yourValue: test.value,
+        minNormal: test.minNormal,
+        maxNormal: test.maxNormal,
+        status: test.status,
+      }));
+
+      const abnormalValues = abnormalTests.map((t: any) => ({
+        name: t.name,
+        value: t.value,
+        status: t.status,
+      }));
+
+      const response = {
+        analysis: {
+          totalTests: tests.length,
+          normalTests: tests.filter((t: any) => t.status === 'Normal').length,
+          abnormalTests: abnormalTests.length,
+        },
+        tests,
+        chartData,
+        abnormalValues,
+        explanation,
+        summary: summary || (abnormalTests.length === 0
+          ? 'All values are within normal ranges'
+          : `${abnormalTests.length} abnormal value(s) detected out of ${tests.length} tests`),
+      };
+
+      console.log('Analysis complete for user:', userId);
+
+      return new Response(JSON.stringify(response), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
+    } catch (analysisError) {
+      console.error('Analysis error:', analysisError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to analyze report. Please try again.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Prepare chart data
-    const chartData = tests.map(test => ({
-      name: test.name,
-      yourValue: test.value,
-      minNormal: test.minNormal,
-      maxNormal: test.maxNormal,
-      status: test.status,
-    }));
-
-    const abnormalValues = tests.filter(t => t.status !== 'Normal').map(t => ({
-      name: t.name,
-      value: t.value,
-      status: t.status,
-    }));
-
-    const response = {
-      analysis: {
-        totalTests: tests.length,
-        normalTests: tests.filter(t => t.status === 'Normal').length,
-        abnormalTests: abnormalTests.length,
-      },
-      tests,
-      chartData,
-      abnormalValues,
-      explanation,
-      summary: abnormalTests.length === 0
-        ? 'All values are within normal ranges'
-        : `${abnormalTests.length} abnormal value(s) detected`,
-    };
-
-    console.log('Analysis complete for user:', userId);
-
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   } catch (error) {
     console.error('Error analyzing report:', error);
     // Return generic error message to avoid leaking internal details
