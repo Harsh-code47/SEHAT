@@ -16,6 +16,7 @@ const ReportAnalyzer = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [extractionStatus, setExtractionStatus] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -36,6 +37,39 @@ const ReportAnalyzer = () => {
     }
   };
 
+  // Extract text from PDF/image using AI vision
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    setExtractionStatus("Converting file to base64...");
+    
+    // Convert file to base64
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = btoa(
+      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+    
+    const mimeType = file.type || 'application/pdf';
+    const dataUrl = `data:${mimeType};base64,${base64}`;
+    
+    setExtractionStatus("Extracting text using AI...");
+    
+    // Use Supabase edge function to extract text using AI vision
+    const { data, error } = await supabase.functions.invoke('analyze-report', {
+      body: { 
+        extractTextFromImage: true,
+        imageData: dataUrl,
+        fileName: file.name
+      },
+    });
+    
+    if (error) throw error;
+    
+    if (data.extractedText) {
+      return data.extractedText;
+    }
+    
+    throw new Error('Failed to extract text from file');
+  };
+
   const analyzeReport = async () => {
     if (!reportText.trim() && !file) {
       toast({
@@ -47,34 +81,45 @@ const ReportAnalyzer = () => {
     }
 
     setIsAnalyzing(true);
+    setExtractionStatus("");
 
     try {
       let textToAnalyze = reportText;
 
-      // If file is selected, upload it first
+      // If file is selected, extract text from it first
       if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
         
+        // Upload file to storage
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('medical-reports')
           .upload(fileName, file);
 
         if (uploadError) throw uploadError;
 
-        // For demo purposes, we'll use the report text
-        // In production, you'd use OCR here for PDF/images
-        textToAnalyze = `Sample report from file: ${file.name}. 
-        
-Hemoglobin: 11.2 g/dL (Reference: 13-17 g/dL)
-White Blood Cell Count: 8500 cells/μL (Reference: 4000-11000 cells/μL)
-Platelet Count: 180000 cells/μL (Reference: 150000-400000 cells/μL)
-Glucose: 145 mg/dL (Reference: 70-100 mg/dL)
-Cholesterol: 240 mg/dL (Reference: <200 mg/dL)
-HDL: 35 mg/dL (Reference: >40 mg/dL)
-LDL: 160 mg/dL (Reference: <100 mg/dL)
-Triglycerides: 220 mg/dL (Reference: <150 mg/dL)`;
+        // For text files, read directly
+        if (fileExt === 'txt') {
+          textToAnalyze = await file.text();
+        } else {
+          // For PDF and images, use AI to extract text
+          try {
+            textToAnalyze = await extractTextFromFile(file);
+            setExtractionStatus("Text extracted successfully!");
+          } catch (extractError: any) {
+            console.error("Text extraction error:", extractError);
+            toast({
+              title: "Extraction Warning",
+              description: "Could not extract text from file. Please paste the report text manually.",
+              variant: "destructive",
+            });
+            setIsAnalyzing(false);
+            return;
+          }
+        }
       }
+
+      setExtractionStatus("Analyzing report...");
 
       // Call edge function for analysis
       const { data, error } = await supabase.functions.invoke('analyze-report', {
@@ -107,6 +152,7 @@ Triglycerides: 220 mg/dL (Reference: <150 mg/dL)`;
       });
     } finally {
       setIsAnalyzing(false);
+      setExtractionStatus("");
     }
   };
 
@@ -227,12 +273,17 @@ Triglycerides: 220 mg/dL (Reference: <150 mg/dL)`;
               {isAnalyzing ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Analyzing Report...
+                  {extractionStatus || "Analyzing Report..."}
                 </>
               ) : (
                 "Analyze Report"
               )}
             </Button>
+            {isAnalyzing && extractionStatus && (
+              <p className="text-sm text-muted-foreground mt-2 animate-pulse">
+                {extractionStatus}
+              </p>
+            )}
           </div>
 
           {analysisResult && (
