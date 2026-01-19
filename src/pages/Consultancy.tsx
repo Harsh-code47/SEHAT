@@ -78,7 +78,7 @@ const Consultancy = () => {
 
       toast({
         title: "Appointment Booked Successfully!",
-        description: `Your consultation with Dr. ${selectedDoctor.full_name} is confirmed for ${format(selectedDate, "PPP")} at ${selectedTime}`,
+        description: `Your consultation with ${selectedDoctor.full_name} is confirmed for ${format(selectedDate, "PPP")} at ${selectedTime}`,
       });
 
     } catch (error: any) {
@@ -148,7 +148,7 @@ const Consultancy = () => {
                           <User className="h-8 w-8 text-white" />
                         </div>
                         <div className="flex-1">
-                          <CardTitle className="text-lg">Dr. {doctor.full_name}</CardTitle>
+                          <CardTitle className="text-lg">{doctor.full_name}</CardTitle>
                           <CardDescription className="flex items-center gap-1 mt-1">
                             <IconComponent className="h-4 w-4" />
                             {doctor.specialty}
@@ -217,7 +217,7 @@ const Consultancy = () => {
                                 <div className="bg-muted rounded-lg p-4 space-y-3">
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Doctor</span>
-                                    <span className="font-medium">Dr. {selectedDoctor?.full_name}</span>
+                                    <span className="font-medium">{selectedDoctor?.full_name}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Date</span>
@@ -266,7 +266,7 @@ const Consultancy = () => {
                                     <User className="h-6 w-6 text-white" />
                                   </div>
                                   <div>
-                                    <div>Dr. {doctor.full_name}</div>
+                                    <div>{doctor.full_name}</div>
                                     <div className="text-sm font-normal text-muted-foreground">
                                       {doctor.specialty}
                                     </div>
