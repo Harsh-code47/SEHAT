@@ -50,7 +50,73 @@ Deno.serve(async (req) => {
     const userId = claimsData.claims.sub;
     console.log('Authenticated user:', userId);
 
-    const { reportText } = await req.json();
+    const body = await req.json();
+    const { reportText, extractTextFromImage, imageData, fileName } = body;
+
+    // Handle text extraction from image/PDF
+    if (extractTextFromImage && imageData) {
+      console.log('Extracting text from file:', fileName);
+      
+      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+      if (!LOVABLE_API_KEY) {
+        return new Response(
+          JSON.stringify({ error: 'AI service not configured' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      try {
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: `Extract ALL text from this medical report image/document. Focus on extracting test names, values, units, and reference ranges. Format the output as plain text with each test on a new line in the format: "Test Name: Value Unit (Reference: range)". Include all medical values like Hemoglobin, WBC, Glucose, Cholesterol, HDL, LDL, Triglycerides, Platelet count, and any other lab values present.`,
+                  },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: imageData,
+                    },
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+
+        if (!aiResponse.ok) {
+          const errorText = await aiResponse.text();
+          console.error('AI extraction error:', errorText);
+          throw new Error('Failed to extract text from image');
+        }
+
+        const aiData = await aiResponse.json();
+        const extractedText = aiData.choices[0]?.message?.content || '';
+        
+        console.log('Extracted text length:', extractedText.length);
+
+        return new Response(
+          JSON.stringify({ extractedText }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (extractError) {
+        console.error('Text extraction error:', extractError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to extract text from file' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     if (!reportText) {
       return new Response(
