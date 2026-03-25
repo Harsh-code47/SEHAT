@@ -61,7 +61,19 @@ const ReportAnalyzer = () => {
       },
     });
     
-    if (error) throw error;
+    if (error) {
+      if (error.context?.body) {
+        try {
+          const reader = error.context.body.getReader();
+          const { value } = await reader.read();
+          const errorBody = JSON.parse(new TextDecoder().decode(value));
+          if (errorBody.error) throw new Error(errorBody.error);
+        } catch (parseErr: any) {
+          if (parseErr.message && parseErr.message !== error.message) throw parseErr;
+        }
+      }
+      throw error;
+    }
     
     if (data.extractedText) {
       return data.extractedText;
@@ -126,7 +138,20 @@ const ReportAnalyzer = () => {
         body: { reportText: textToAnalyze },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try to extract the actual error message from the response
+        if (error.context?.body) {
+          try {
+            const reader = error.context.body.getReader();
+            const { value } = await reader.read();
+            const errorBody = JSON.parse(new TextDecoder().decode(value));
+            if (errorBody.error) throw new Error(errorBody.error);
+          } catch (parseErr: any) {
+            if (parseErr.message && parseErr.message !== error.message) throw parseErr;
+          }
+        }
+        throw error;
+      }
 
       setAnalysisResult(data);
 
