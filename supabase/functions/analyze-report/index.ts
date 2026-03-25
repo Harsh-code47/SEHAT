@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
                 content: [
                   {
                     type: 'text',
-                    text: `Extract ALL text from this medical report image/document. Include every single test name, value, unit, and reference range exactly as shown. Format each test on a new line. Be comprehensive and include ALL tests visible in the report.`,
+                    text: `First, determine if this image/document is a medical or laboratory report. If it is NOT a medical report, respond with exactly "NOT_MEDICAL_REPORT" and nothing else. If it IS a medical report, extract ALL text from it. Include every single test name, value, unit, and reference range exactly as shown. Format each test on a new line. Be comprehensive and include ALL tests visible in the report.`,
                   },
                   {
                     type: 'image_url',
@@ -103,6 +103,14 @@ Deno.serve(async (req) => {
         const aiData = await aiResponse.json();
         const extractedText = aiData.choices[0]?.message?.content || '';
         
+        // Check if AI determined it's not a medical report
+        if (extractedText.trim().startsWith('NOT_MEDICAL_REPORT')) {
+          return new Response(
+            JSON.stringify({ error: 'The uploaded file does not appear to be a medical or laboratory report. Please upload a valid medical report.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         console.log('Extracted text length:', extractedText.length);
 
         return new Response(
@@ -131,6 +139,44 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Report text exceeds maximum allowed length' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Validate that the content is actually a medical report
+    console.log('Validating if content is a medical report...');
+    try {
+      const validationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash-lite',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a document classifier. Determine if the given text is from a medical/lab report. A medical report contains test names, numeric values, units, and reference ranges. Respond ONLY with "yes" or "no".',
+            },
+            {
+              role: 'user',
+              content: `Is this text from a medical or laboratory report?\n\n${reportText.substring(0, 3000)}`,
+            },
+          ],
+        }),
+      });
+
+      if (validationResponse.ok) {
+        const validationData = await validationResponse.json();
+        const answer = (validationData.choices[0]?.message?.content || '').trim().toLowerCase();
+        if (answer.startsWith('no')) {
+          return new Response(
+            JSON.stringify({ error: 'The uploaded content does not appear to be a medical or laboratory report. Please upload a valid medical report.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    } catch (valError) {
+      console.error('Validation check failed, proceeding with analysis:', valError);
     }
 
     console.log('Analyzing report text with AI...');
