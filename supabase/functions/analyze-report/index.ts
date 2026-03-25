@@ -103,6 +103,14 @@ Deno.serve(async (req) => {
         const aiData = await aiResponse.json();
         const extractedText = aiData.choices[0]?.message?.content || '';
         
+        // Check if AI determined it's not a medical report
+        if (extractedText.trim().startsWith('NOT_MEDICAL_REPORT')) {
+          return new Response(
+            JSON.stringify({ error: 'The uploaded file does not appear to be a medical or laboratory report. Please upload a valid medical report.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         console.log('Extracted text length:', extractedText.length);
 
         return new Response(
