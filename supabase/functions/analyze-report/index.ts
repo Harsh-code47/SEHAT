@@ -133,6 +133,44 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Validate that the content is actually a medical report
+    console.log('Validating if content is a medical report...');
+    try {
+      const validationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash-lite',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a document classifier. Determine if the given text is from a medical/lab report. A medical report contains test names, numeric values, units, and reference ranges. Respond ONLY with "yes" or "no".',
+            },
+            {
+              role: 'user',
+              content: `Is this text from a medical or laboratory report?\n\n${reportText.substring(0, 3000)}`,
+            },
+          ],
+        }),
+      });
+
+      if (validationResponse.ok) {
+        const validationData = await validationResponse.json();
+        const answer = (validationData.choices[0]?.message?.content || '').trim().toLowerCase();
+        if (answer.startsWith('no')) {
+          return new Response(
+            JSON.stringify({ error: 'The uploaded content does not appear to be a medical or laboratory report. Please upload a valid medical report.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    } catch (valError) {
+      console.error('Validation check failed, proceeding with analysis:', valError);
+    }
+
     console.log('Analyzing report text with AI...');
 
     // Use AI to extract ALL test values with their reference ranges from the report
