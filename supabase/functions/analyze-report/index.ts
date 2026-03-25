@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
                 content: [
                   {
                     type: 'text',
-                    text: `Extract ALL text from this medical report image/document. Include every single test name, value, unit, and reference range exactly as shown. Format each test on a new line. Be comprehensive and include ALL tests visible in the report.`,
+                    text: `First, determine if this image/document is a medical or laboratory report. If it is NOT a medical report, respond with exactly "NOT_MEDICAL_REPORT" and nothing else. If it IS a medical report, extract ALL text from it. Include every single test name, value, unit, and reference range exactly as shown. Format each test on a new line. Be comprehensive and include ALL tests visible in the report.`,
                   },
                   {
                     type: 'image_url',
