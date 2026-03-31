@@ -44,13 +44,17 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/dashboard");
-      }
+      if (session) navigate("/dashboard");
     });
   }, [navigate]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
