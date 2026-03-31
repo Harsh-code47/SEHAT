@@ -11,7 +11,19 @@ import { User, Stethoscope } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import authHeroImage from "@/assets/auth-hero.jpg";
+import authHero2 from "@/assets/auth-hero-2.jpg";
+import authHero3 from "@/assets/auth-hero-3.jpg";
+import authHero4 from "@/assets/auth-hero-4.jpg";
+import authHero5 from "@/assets/auth-hero-5.jpg";
 import sehatLogo from "@/assets/sehat-logo.png";
+
+const heroSlides = [
+  { image: authHeroImage, title: "Store your Medical Records", subtitle: "Share with your doctor from anywhere, anytime" },
+  { image: authHero2, title: "Expert Doctor Consultations", subtitle: "Connect with top healthcare professionals online" },
+  { image: authHero3, title: "Stay Active, Stay Healthy", subtitle: "Track your fitness and wellness journey with us" },
+  { image: authHero4, title: "Nutrition & Healthy Eating", subtitle: "Get personalized diet plans and food insights" },
+  { image: authHero5, title: "Mental Wellness Matters", subtitle: "Mindfulness and meditation for a balanced life" },
+];
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -27,17 +39,22 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<UserRole>("user");
+  const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/dashboard");
-      }
+      if (session) navigate("/dashboard");
     });
   }, [navigate]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,22 +132,33 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Hero Image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <img 
-          src={authHeroImage} 
-          alt="Healthy lifestyle" 
-          className="absolute inset-0 w-full h-full object-cover animate-scale-in"
-        />
+        {heroSlides.map((slide, index) => (
+          <img
+            key={index}
+            src={slide.image}
+            alt={slide.title}
+            className={cn(
+              "absolute inset-0 w-full h-full object-cover transition-opacity duration-700",
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            )}
+          />
+        ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <h2 className="text-3xl font-bold mb-2 opacity-0 animate-fade-in-up animate-delay-300">Store your Medical Records</h2>
-          <p className="text-white/90 opacity-0 animate-fade-in-up animate-delay-500">Share with your doctor from anywhere, anytime</p>
-          <div className="flex gap-2 mt-6 opacity-0 animate-fade-in animate-delay-700">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div 
-                key={i} 
+          <h2 key={`title-${currentSlide}`} className="text-3xl font-bold mb-2 animate-fade-in">
+            {heroSlides[currentSlide].title}
+          </h2>
+          <p key={`sub-${currentSlide}`} className="text-white/90 animate-fade-in">
+            {heroSlides[currentSlide].subtitle}
+          </p>
+          <div className="flex gap-2 mt-6">
+            {heroSlides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
                 className={cn(
                   "h-1 rounded-full transition-all duration-300",
-                  i === 5 ? "w-8 bg-white" : "w-4 bg-white/50 hover:bg-white/80"
+                  i === currentSlide ? "w-8 bg-white" : "w-4 bg-white/50 hover:bg-white/80"
                 )}
               />
             ))}
