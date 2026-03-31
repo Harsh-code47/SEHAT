@@ -11,7 +11,19 @@ import { User, Stethoscope } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import authHeroImage from "@/assets/auth-hero.jpg";
+import authHero2 from "@/assets/auth-hero-2.jpg";
+import authHero3 from "@/assets/auth-hero-3.jpg";
+import authHero4 from "@/assets/auth-hero-4.jpg";
+import authHero5 from "@/assets/auth-hero-5.jpg";
 import sehatLogo from "@/assets/sehat-logo.png";
+
+const heroSlides = [
+  { image: authHeroImage, title: "Store your Medical Records", subtitle: "Share with your doctor from anywhere, anytime" },
+  { image: authHero2, title: "Expert Doctor Consultations", subtitle: "Connect with top healthcare professionals online" },
+  { image: authHero3, title: "Stay Active, Stay Healthy", subtitle: "Track your fitness and wellness journey with us" },
+  { image: authHero4, title: "Nutrition & Healthy Eating", subtitle: "Get personalized diet plans and food insights" },
+  { image: authHero5, title: "Mental Wellness Matters", subtitle: "Mindfulness and meditation for a balanced life" },
+];
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
