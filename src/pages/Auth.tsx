@@ -132,22 +132,33 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Hero Image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <img 
-          src={authHeroImage} 
-          alt="Healthy lifestyle" 
-          className="absolute inset-0 w-full h-full object-cover animate-scale-in"
-        />
+        {heroSlides.map((slide, index) => (
+          <img
+            key={index}
+            src={slide.image}
+            alt={slide.title}
+            className={cn(
+              "absolute inset-0 w-full h-full object-cover transition-opacity duration-700",
+              index === currentSlide ? "opacity-100" : "opacity-0"
+            )}
+          />
+        ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <h2 className="text-3xl font-bold mb-2 opacity-0 animate-fade-in-up animate-delay-300">Store your Medical Records</h2>
-          <p className="text-white/90 opacity-0 animate-fade-in-up animate-delay-500">Share with your doctor from anywhere, anytime</p>
-          <div className="flex gap-2 mt-6 opacity-0 animate-fade-in animate-delay-700">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div 
-                key={i} 
+          <h2 key={`title-${currentSlide}`} className="text-3xl font-bold mb-2 animate-fade-in">
+            {heroSlides[currentSlide].title}
+          </h2>
+          <p key={`sub-${currentSlide}`} className="text-white/90 animate-fade-in">
+            {heroSlides[currentSlide].subtitle}
+          </p>
+          <div className="flex gap-2 mt-6">
+            {heroSlides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
                 className={cn(
                   "h-1 rounded-full transition-all duration-300",
-                  i === 5 ? "w-8 bg-white" : "w-4 bg-white/50 hover:bg-white/80"
+                  i === currentSlide ? "w-8 bg-white" : "w-4 bg-white/50 hover:bg-white/80"
                 )}
               />
             ))}
