@@ -11,6 +11,8 @@ import BMICalculator from "./pages/BMICalculator";
 import ReportAnalyzer from "./pages/ReportAnalyzer";
 import Consultancy from "./pages/Consultancy";
 import Prescription from "./pages/Prescription";
+import DoctorAppointments from "./pages/DoctorAppointments";
+import DoctorPatients from "./pages/DoctorPatients";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
