@@ -265,7 +265,7 @@ const Prescription = () => {
             data-download-btn
             variant="outline"
             className="w-full"
-            onClick={() => handleDownloadPrescription(prescription, cardRef.current)}
+            onClick={() => handleDownloadPrescription(prescription)}
           >
             <Download className="mr-2 h-4 w-4" />
             Download Prescription
