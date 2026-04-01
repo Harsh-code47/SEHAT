@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Pill, Calendar, Clock, User, FileText, Download, RefreshCw } from "lucide-react";
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+
 
 // Mock prescription data
 const mockPrescriptions = [
