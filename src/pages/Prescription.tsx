@@ -89,95 +89,175 @@ const Prescription = () => {
   const handleDownloadPrescription = useCallback((prescription: typeof mockPrescriptions[0]) => {
     try {
       const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      let y = 20;
+      const W = pdf.internal.pageSize.getWidth();
+      const H = pdf.internal.pageSize.getHeight();
 
-      // Header
-      pdf.setFontSize(20);
-      pdf.setTextColor(41, 128, 185);
-      pdf.text("SEHAT - Prescription", pageWidth / 2, y, { align: "center" });
-      y += 12;
+      // Brand colors (teal theme from app)
+      const primary = { r: 15, g: 118, b: 110 };    // teal-700
+      const accent = { r: 20, g: 184, b: 166 };      // teal-500
+      const dark = { r: 15, g: 23, b: 42 };           // slate-900
+      const muted = { r: 100, g: 116, b: 139 };       // slate-500
+      const lightBg = { r: 240, g: 253, b: 250 };     // teal-50
+      const borderColor = { r: 204, g: 251, b: 241 }; // teal-100
 
-      pdf.setDrawColor(41, 128, 185);
-      pdf.setLineWidth(0.5);
-      pdf.line(15, y, pageWidth - 15, y);
-      y += 10;
+      // === Header Banner ===
+      pdf.setFillColor(primary.r, primary.g, primary.b);
+      pdf.rect(0, 0, W, 34, "F");
 
-      // Doctor Info
-      pdf.setFontSize(14);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(prescription.doctorName, 15, y);
-      y += 7;
-      pdf.setFontSize(11);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(prescription.specialty, 15, y);
-      y += 7;
-      pdf.text(`Date: ${new Date(prescription.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`, 15, y);
-      y += 7;
-      pdf.text(`Status: ${prescription.status.charAt(0).toUpperCase() + prescription.status.slice(1)}`, 15, y);
-      y += 12;
+      // Accent stripe
+      pdf.setFillColor(accent.r, accent.g, accent.b);
+      pdf.rect(0, 34, W, 2, "F");
 
-      // Diagnosis
-      pdf.setFontSize(13);
-      pdf.setTextColor(41, 128, 185);
-      pdf.text("Diagnosis", 15, y);
-      y += 7;
-      pdf.setFontSize(11);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(prescription.diagnosis, 15, y);
-      y += 12;
-
-      // Medications Table
-      pdf.setFontSize(13);
-      pdf.setTextColor(41, 128, 185);
-      pdf.text("Medications", 15, y);
-      y += 8;
-
-      // Table header
-      pdf.setFillColor(240, 240, 240);
-      pdf.rect(15, y - 5, pageWidth - 30, 8, "F");
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
+      // Header text
+      pdf.setTextColor(255, 255, 255);
       pdf.setFont("helvetica", "bold");
-      pdf.text("Medicine", 17, y);
-      pdf.text("Dosage", 80, y);
-      pdf.text("Frequency", 115, y);
-      pdf.text("Duration", 160, y);
-      y += 8;
+      pdf.setFontSize(22);
+      pdf.text("SEHAT", 16, 16);
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("Digital Healthcare Platform", 16, 24);
+
+      // Prescription label on right
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+      pdf.text("PRESCRIPTION", W - 16, 16, { align: "right" });
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9);
+      pdf.text(`Date: ${new Date(prescription.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`, W - 16, 24, { align: "right" });
+
+      let y = 46;
+
+      // === Doctor Info Card ===
+      pdf.setDrawColor(borderColor.r, borderColor.g, borderColor.b);
+      pdf.setFillColor(lightBg.r, lightBg.g, lightBg.b);
+      pdf.roundedRect(14, y, W - 28, 28, 3, 3, "FD");
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(13);
+      pdf.setTextColor(dark.r, dark.g, dark.b);
+      pdf.text(prescription.doctorName, 20, y + 10);
 
       pdf.setFont("helvetica", "normal");
-      prescription.medications.forEach((med) => {
-        pdf.setFontSize(10);
-        pdf.text(med.name, 17, y);
-        pdf.text(med.dosage, 80, y);
-        pdf.text(med.frequency, 115, y);
-        pdf.text(med.duration, 160, y);
-        y += 7;
-      });
-      y += 5;
+      pdf.setFontSize(10);
+      pdf.setTextColor(muted.r, muted.g, muted.b);
+      pdf.text(prescription.specialty, 20, y + 18);
 
-      // Notes
+      // Status badge on right
+      const statusText = prescription.status === "active" ? "ACTIVE" : "COMPLETED";
+      const badgeX = W - 20;
+      if (prescription.status === "active") {
+        pdf.setFillColor(accent.r, accent.g, accent.b);
+      } else {
+        pdf.setFillColor(muted.r, muted.g, muted.b);
+      }
+      const badgeWidth = pdf.getTextWidth(statusText) + 8;
+      pdf.roundedRect(badgeX - badgeWidth, y + 5, badgeWidth, 8, 2, 2, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(statusText, badgeX - badgeWidth / 2, y + 10.5, { align: "center" });
+
+      y += 36;
+
+      // === Diagnosis Section ===
+      pdf.setFillColor(primary.r, primary.g, primary.b);
+      pdf.roundedRect(14, y, 4, 12, 1, 1, "F");
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.setTextColor(primary.r, primary.g, primary.b);
+      pdf.text("Diagnosis", 22, y + 7);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      pdf.setTextColor(dark.r, dark.g, dark.b);
+      pdf.text(prescription.diagnosis, 22, y + 15);
+
+      y += 24;
+
+      // === Medications Section ===
+      pdf.setFillColor(primary.r, primary.g, primary.b);
+      pdf.roundedRect(14, y, 4, 12, 1, 1, "F");
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.setTextColor(primary.r, primary.g, primary.b);
+      pdf.text(`Medications (${prescription.medications.length})`, 22, y + 7);
+      y += 16;
+
+      // Table header
+      pdf.setFillColor(primary.r, primary.g, primary.b);
+      pdf.roundedRect(14, y, W - 28, 10, 2, 2, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Medicine", 20, y + 7);
+      pdf.text("Dosage", 82, y + 7);
+      pdf.text("Frequency", 118, y + 7);
+      pdf.text("Duration", 165, y + 7);
+      y += 13;
+
+      // Table rows
+      prescription.medications.forEach((med, index) => {
+        const rowBg = index % 2 === 0;
+        if (rowBg) {
+          pdf.setFillColor(lightBg.r, lightBg.g, lightBg.b);
+          pdf.rect(14, y - 4, W - 28, 10, "F");
+        }
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9);
+        pdf.setTextColor(dark.r, dark.g, dark.b);
+        pdf.text(med.name, 20, y + 2);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(muted.r, muted.g, muted.b);
+        pdf.text(med.dosage, 82, y + 2);
+        pdf.text(med.frequency, 118, y + 2);
+        pdf.text(med.duration, 165, y + 2);
+        y += 10;
+      });
+      y += 6;
+
+      // === Doctor's Notes ===
       if (prescription.notes) {
-        pdf.setFontSize(13);
-        pdf.setTextColor(41, 128, 185);
-        pdf.text("Doctor's Notes", 15, y);
-        y += 7;
-        pdf.setFontSize(11);
-        pdf.setTextColor(0, 0, 0);
-        const noteLines = pdf.splitTextToSize(prescription.notes, pageWidth - 30);
-        pdf.text(noteLines, 15, y);
-        y += noteLines.length * 6 + 10;
+        pdf.setFillColor(primary.r, primary.g, primary.b);
+        pdf.roundedRect(14, y, 4, 12, 1, 1, "F");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(12);
+        pdf.setTextColor(primary.r, primary.g, primary.b);
+        pdf.text("Doctor's Notes", 22, y + 7);
+        y += 14;
+
+        pdf.setDrawColor(borderColor.r, borderColor.g, borderColor.b);
+        pdf.setFillColor(255, 251, 235); // amber-50
+        const noteLines = pdf.splitTextToSize(prescription.notes, W - 44);
+        const noteHeight = noteLines.length * 6 + 8;
+        pdf.roundedRect(14, y, W - 28, noteHeight, 2, 2, "FD");
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        pdf.setTextColor(dark.r, dark.g, dark.b);
+        pdf.text(noteLines, 20, y + 8);
+        y += noteHeight + 8;
       }
 
-      // Footer
-      pdf.setDrawColor(200, 200, 200);
-      pdf.line(15, y, pageWidth - 15, y);
-      y += 8;
-      pdf.setFontSize(9);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text("Generated by SEHAT Health Platform", pageWidth / 2, y, { align: "center" });
+      // === Footer ===
+      const footerY = H - 20;
+      pdf.setDrawColor(accent.r, accent.g, accent.b);
+      pdf.setLineWidth(0.5);
+      pdf.line(14, footerY, W - 14, footerY);
 
-      pdf.save(`prescription-${prescription.doctorName.replace(/\s+/g, '-')}-${prescription.date}.pdf`);
+      pdf.setFontSize(8);
+      pdf.setTextColor(muted.r, muted.g, muted.b);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("This is a digitally generated prescription from SEHAT Health Platform.", 16, footerY + 6);
+      pdf.text(`Generated on ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`, 16, footerY + 11);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(primary.r, primary.g, primary.b);
+      pdf.text("SEHAT", W - 16, footerY + 8, { align: "right" });
+
+      pdf.save(`SEHAT-Prescription-${prescription.doctorName.replace(/\s+/g, '-')}-${prescription.date}.pdf`);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
     }
