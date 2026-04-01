@@ -86,84 +86,125 @@ const Prescription = () => {
   const activePrescriptions = prescriptions.filter((p) => p.status === "active");
   const completedPrescriptions = prescriptions.filter((p) => p.status === "completed");
 
-  const PrescriptionCard = ({ prescription }: { prescription: typeof mockPrescriptions[0] }) => (
-    <Card className="hover:shadow-lg transition-all duration-300">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <User className="h-4 w-4 text-primary" />
-              {prescription.doctorName}
-            </CardTitle>
-            <CardDescription>{prescription.specialty}</CardDescription>
-          </div>
-          <Badge variant={prescription.status === "active" ? "default" : "secondary"}>
-            {prescription.status === "active" ? "Active" : "Completed"}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
-            {new Date(prescription.date).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </div>
-        </div>
+  const handleDownloadPrescription = useCallback(async (prescription: typeof mockPrescriptions[0], cardRef: HTMLDivElement | null) => {
+    if (!cardRef) return;
 
-        <div className="bg-muted/50 rounded-lg p-3">
-          <div className="text-sm font-medium text-primary mb-1">Diagnosis</div>
-          <div className="text-sm">{prescription.diagnosis}</div>
-        </div>
+    const downloadBtn = cardRef.querySelector('[data-download-btn]') as HTMLElement;
+    if (downloadBtn) downloadBtn.style.display = 'none';
 
-        <div className="space-y-3">
-          <div className="text-sm font-medium flex items-center gap-2">
-            <Pill className="h-4 w-4 text-primary" />
-            Medications ({prescription.medications.length})
-          </div>
-          <div className="space-y-2">
-            {prescription.medications.map((med, index) => (
-              <div key={index} className="bg-card border rounded-lg p-3 space-y-1">
-                <div className="font-medium text-sm">{med.name}</div>
-                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    {med.dosage}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {med.frequency}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <RefreshCw className="h-3 w-3" />
-                    {med.duration}
-                  </span>
-                </div>
+    try {
+      const canvas = await html2canvas(cardRef, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
+      const pdfWidth = 190;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 10, 10, pdfWidth, pdfHeight);
+      pdf.save(`prescription-${prescription.doctorName.replace(/\s+/g, '-')}-${prescription.date}.pdf`);
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+    } finally {
+      if (downloadBtn) downloadBtn.style.display = '';
+    }
+  }, []);
+
+  const PrescriptionCard = ({ prescription }: { prescription: typeof mockPrescriptions[0] }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    return (
+      <Card className="hover:shadow-lg transition-all duration-300">
+        <div ref={cardRef}>
+          <CardHeader className="pb-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  {prescription.doctorName}
+                </CardTitle>
+                <CardDescription>{prescription.specialty}</CardDescription>
               </div>
-            ))}
-          </div>
+              <Badge variant={prescription.status === "active" ? "default" : "secondary"}>
+                {prescription.status === "active" ? "Active" : "Completed"}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                {new Date(prescription.date).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </div>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-3">
+              <div className="text-sm font-medium text-primary mb-1">Diagnosis</div>
+              <div className="text-sm">{prescription.diagnosis}</div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-sm font-medium flex items-center gap-2">
+                <Pill className="h-4 w-4 text-primary" />
+                Medications ({prescription.medications.length})
+              </div>
+              <div className="space-y-2">
+                {prescription.medications.map((med, index) => (
+                  <div key={index} className="bg-card border rounded-lg p-3 space-y-1">
+                    <div className="font-medium text-sm">{med.name}</div>
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        {med.dosage}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {med.frequency}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <RefreshCw className="h-3 w-3" />
+                        {med.duration}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {prescription.notes && (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                <div className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  Doctor's Notes
+                </div>
+                <div className="text-sm text-muted-foreground">{prescription.notes}</div>
+              </div>
+            )}
+          </CardContent>
         </div>
 
-        {prescription.notes && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-            <div className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
-              <FileText className="h-4 w-4" />
-              Doctor's Notes
-            </div>
-            <div className="text-sm text-muted-foreground">{prescription.notes}</div>
-          </div>
-        )}
-
-        <Button variant="outline" className="w-full" onClick={() => window.print()}>
-          <Download className="mr-2 h-4 w-4" />
-          Download Prescription
-        </Button>
-      </CardContent>
-    </Card>
-  );
+        <CardContent className="pt-0">
+          <Button
+            data-download-btn
+            variant="outline"
+            className="w-full"
+            onClick={() => handleDownloadPrescription(prescription, cardRef.current)}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download Prescription
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
