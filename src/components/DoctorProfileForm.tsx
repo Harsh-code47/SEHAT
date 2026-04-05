@@ -128,6 +128,18 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="display_name">Display Name <span className="text-destructive">*</span></Label>
+          <Input
+            id="display_name"
+            placeholder="e.g. Dr. Sharma"
+            value={profile.display_name}
+            onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
+            required
+          />
+          <p className="text-xs text-muted-foreground">This name will be shown to patients</p>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="specialty">Specialty</Label>
