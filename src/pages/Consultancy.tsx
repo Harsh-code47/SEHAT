@@ -148,7 +148,7 @@ const Consultancy = () => {
                           <User className="h-8 w-8 text-white" />
                         </div>
                         <div className="flex-1">
-                          <CardTitle className="text-lg">Dr. {doctor.full_name}</CardTitle>
+                          <CardTitle className="text-lg">{doctor.full_name?.startsWith("Dr.") ? doctor.full_name : `Dr. ${doctor.full_name}`}</CardTitle>
                           <CardDescription className="flex items-center gap-1 mt-1">
                             <IconComponent className="h-4 w-4" />
                             {doctor.specialty}
