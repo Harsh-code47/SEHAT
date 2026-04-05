@@ -12,6 +12,7 @@ import { Loader2, Save, Stethoscope } from "lucide-react";
 
 interface DoctorProfile {
   id?: string;
+  display_name: string;
   specialty: string;
   experience_years: number;
   consultation_fee: number;
