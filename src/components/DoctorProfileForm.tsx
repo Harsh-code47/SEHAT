@@ -12,6 +12,7 @@ import { Loader2, Save, Stethoscope } from "lucide-react";
 
 interface DoctorProfile {
   id?: string;
+  display_name: string;
   specialty: string;
   experience_years: number;
   consultation_fee: number;
@@ -47,6 +48,7 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<DoctorProfile>({
+    display_name: initialData?.display_name || "",
     specialty: initialData?.specialty || "General Physician",
     experience_years: initialData?.experience_years || 0,
     consultation_fee: initialData?.consultation_fee || 500,
@@ -55,6 +57,14 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
   });
 
   const handleSave = async () => {
+    if (!profile.display_name.trim()) {
+      toast({
+        title: "Display name required",
+        description: "Please enter your name as it should appear to patients.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     try {
       if (initialData?.id) {
@@ -62,6 +72,7 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
         const { error } = await supabase
           .from("doctor_profiles")
           .update({
+            display_name: profile.display_name,
             specialty: profile.specialty,
             experience_years: profile.experience_years,
             consultation_fee: profile.consultation_fee,
@@ -77,6 +88,7 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
           .from("doctor_profiles")
           .insert({
             user_id: userId,
+            display_name: profile.display_name,
             specialty: profile.specialty,
             experience_years: profile.experience_years,
             consultation_fee: profile.consultation_fee,
@@ -116,6 +128,18 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="display_name">Display Name <span className="text-destructive">*</span></Label>
+          <Input
+            id="display_name"
+            placeholder="e.g. Dr. Sharma"
+            value={profile.display_name}
+            onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
+            required
+          />
+          <p className="text-xs text-muted-foreground">This name will be shown to patients</p>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="specialty">Specialty</Label>
