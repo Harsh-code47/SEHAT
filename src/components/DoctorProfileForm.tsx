@@ -57,6 +57,14 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
   });
 
   const handleSave = async () => {
+    if (!profile.display_name.trim()) {
+      toast({
+        title: "Display name required",
+        description: "Please enter your name as it should appear to patients.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     try {
       if (initialData?.id) {
