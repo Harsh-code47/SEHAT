@@ -72,6 +72,7 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
         const { error } = await supabase
           .from("doctor_profiles")
           .update({
+            display_name: profile.display_name,
             specialty: profile.specialty,
             experience_years: profile.experience_years,
             consultation_fee: profile.consultation_fee,
