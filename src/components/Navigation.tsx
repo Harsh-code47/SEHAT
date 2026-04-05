@@ -127,7 +127,7 @@ export const Navigation = () => {
                 "hidden md:flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full",
                 userRole === "doctor"
                   ? "bg-primary/10 text-primary"
-                  : "bg-accent/10 text-accent-foreground"
+                  : "bg-accent/10 text-accent"
               )}>
                 {userRole === "doctor" ? <Stethoscope className="h-3 w-3" /> : <User className="h-3 w-3" />}
                 {userRole === "doctor" ? "Doctor" : "Patient"}
