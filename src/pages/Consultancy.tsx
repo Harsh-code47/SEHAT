@@ -266,7 +266,7 @@ const Consultancy = () => {
                                     <User className="h-6 w-6 text-white" />
                                   </div>
                                   <div>
-                                    <div>Dr. {doctor.full_name}</div>
+                                    <div>{doctor.full_name?.startsWith("Dr.") ? doctor.full_name : `Dr. ${doctor.full_name}`}</div>
                                     <div className="text-sm font-normal text-muted-foreground">
                                       {doctor.specialty}
                                     </div>
