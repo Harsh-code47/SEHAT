@@ -88,6 +88,7 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
           .from("doctor_profiles")
           .insert({
             user_id: userId,
+            display_name: profile.display_name,
             specialty: profile.specialty,
             experience_years: profile.experience_years,
             consultation_fee: profile.consultation_fee,
