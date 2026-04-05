@@ -217,7 +217,7 @@ const Consultancy = () => {
                                 <div className="bg-muted rounded-lg p-4 space-y-3">
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Doctor</span>
-                                    <span className="font-medium">Dr. {selectedDoctor?.full_name}</span>
+                                    <span className="font-medium">{selectedDoctor?.full_name?.startsWith("Dr.") ? selectedDoctor.full_name : `Dr. ${selectedDoctor?.full_name}`}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-muted-foreground">Date</span>
