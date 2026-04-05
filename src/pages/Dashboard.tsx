@@ -257,6 +257,7 @@ const DoctorDashboard = ({ user }: { user: any }) => {
         <DoctorProfileForm
           initialData={profile ? {
             id: profile.id,
+            display_name: profile.display_name || "",
             specialty: profile.specialty,
             experience_years: profile.experience_years,
             consultation_fee: profile.consultation_fee,
