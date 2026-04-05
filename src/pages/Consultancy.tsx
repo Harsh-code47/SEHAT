@@ -78,7 +78,7 @@ const Consultancy = () => {
 
       toast({
         title: "Appointment Booked Successfully!",
-        description: `Your consultation with Dr. ${selectedDoctor.full_name} is confirmed for ${format(selectedDate, "PPP")} at ${selectedTime}`,
+        description: `Your consultation with ${selectedDoctor.full_name?.startsWith("Dr.") ? selectedDoctor.full_name : `Dr. ${selectedDoctor.full_name}`} is confirmed for ${format(selectedDate, "PPP")} at ${selectedTime}`,
       });
 
     } catch (error: any) {
