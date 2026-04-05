@@ -48,6 +48,7 @@ export const DoctorProfileForm = ({ initialData, userId, onSave }: DoctorProfile
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<DoctorProfile>({
+    display_name: initialData?.display_name || "",
     specialty: initialData?.specialty || "General Physician",
     experience_years: initialData?.experience_years || 0,
     consultation_fee: initialData?.consultation_fee || 500,
