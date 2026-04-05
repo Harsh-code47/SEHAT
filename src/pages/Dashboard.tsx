@@ -111,7 +111,12 @@ const Dashboard = () => {
 
 const PatientDashboard = ({ user }: { user: any }) => {
   const { appointments, loading: appointmentsLoading } = useAppointments(user?.id, "patient");
-  const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingAppointments = appointments.filter(a => {
+    const appointmentDate = new Date(a.appointment_date);
+    return a.status === "scheduled" && appointmentDate >= today;
+  });
 
   return (
     <div className="space-y-8">
