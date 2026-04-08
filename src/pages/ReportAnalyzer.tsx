@@ -17,6 +17,7 @@ const ReportAnalyzer = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [extractionStatus, setExtractionStatus] = useState<string>("");
+  const [language, setLanguage] = useState<"english" | "hindi">("english");
   const navigate = useNavigate();
   const { toast } = useToast();
 
