@@ -313,7 +313,9 @@ IMPORTANT:
           explanation = explanationData.choices[0]?.message?.content || '';
         }
       } else {
-        explanation = 'All your test results are within normal ranges. This is a positive sign indicating good health in the measured areas. Continue maintaining a healthy lifestyle.';
+        explanation = isHindi
+          ? 'आपके सभी टेस्ट परिणाम सामान्य सीमा में हैं। यह एक सकारात्मक संकेत है जो मापे गए क्षेत्रों में अच्छे स्वास्थ्य को दर्शाता है। स्वस्थ जीवनशैली बनाए रखें।'
+          : 'All your test results are within normal ranges. This is a positive sign indicating good health in the measured areas. Continue maintaining a healthy lifestyle.';
       }
 
       // Prepare chart data
