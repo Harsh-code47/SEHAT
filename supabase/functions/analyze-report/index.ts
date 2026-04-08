@@ -290,13 +290,19 @@ IMPORTANT:
             messages: [
               {
                 role: 'system',
-                content: 'You are a medical assistant helping patients understand their lab results. Provide clear, simple explanations without medical jargon. Be reassuring but accurate. Keep response under 200 words.',
+                content: isHindi
+                  ? 'आप एक मेडिकल सहायक हैं जो मरीजों को उनकी लैब रिपोर्ट समझने में मदद करते हैं। सरल हिंदी में स्पष्ट व्याख्या दें। चिकित्सा शब्दजाल से बचें। 200 शब्दों से कम रखें।'
+                  : 'You are a medical assistant helping patients understand their lab results. Provide clear, simple explanations without medical jargon. Be reassuring but accurate. Keep response under 200 words.',
               },
               {
                 role: 'user',
-                content: `Explain these abnormal lab results in simple terms: ${abnormalTests.map((t: any) => 
-                  `${t.name}: ${t.value} ${t.unit} (${t.status}, Normal: ${t.referenceRange})`
-                ).join(', ')}. What might these indicate and what should the patient do?`,
+                content: isHindi
+                  ? `इन असामान्य लैब परिणामों को सरल हिंदी में समझाएं: ${abnormalTests.map((t: any) => 
+                      `${t.name}: ${t.value} ${t.unit} (${t.status}, सामान्य: ${t.referenceRange})`
+                    ).join(', ')}. ये क्या संकेत दे सकते हैं और मरीज को क्या करना चाहिए?`
+                  : `Explain these abnormal lab results in simple terms: ${abnormalTests.map((t: any) => 
+                      `${t.name}: ${t.value} ${t.unit} (${t.status}, Normal: ${t.referenceRange})`
+                    ).join(', ')}. What might these indicate and what should the patient do?`,
               },
             ],
           }),
