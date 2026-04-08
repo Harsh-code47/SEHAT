@@ -147,7 +147,7 @@ const ReportAnalyzer = () => {
 
       // Call edge function for analysis
       const { data, error } = await supabase.functions.invoke('analyze-report', {
-        body: { reportText: textToAnalyze },
+        body: { reportText: textToAnalyze, language },
       });
 
       if (error) {
