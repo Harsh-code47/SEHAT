@@ -301,7 +301,19 @@ const ReportAnalyzer = () => {
             </Card>
           </div>
 
-          <div className="text-center mb-6">
+          <div className="flex flex-col items-center gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Languages className="h-5 w-5 text-muted-foreground" />
+              <Select value={language} onValueChange={(val: "english" | "hindi") => setLanguage(val)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="english">English</SelectItem>
+                  <SelectItem value="hindi">हिन्दी (Hindi)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               onClick={analyzeReport}
               disabled={isAnalyzing || (!reportText.trim() && !file)}
@@ -314,7 +326,7 @@ const ReportAnalyzer = () => {
                   {extractionStatus || "Analyzing Report..."}
                 </>
               ) : (
-                "Analyze Report"
+                language === "hindi" ? "रिपोर्ट का विश्लेषण करें" : "Analyze Report"
               )}
             </Button>
             {isAnalyzing && extractionStatus && (
