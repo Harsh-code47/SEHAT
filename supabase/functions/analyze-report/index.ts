@@ -50,7 +50,8 @@ Deno.serve(async (req) => {
     console.log('Authenticated user:', userId);
 
     const body = await req.json();
-    const { reportText, extractTextFromImage, imageData, fileName } = body;
+    const { reportText, extractTextFromImage, imageData, fileName, language } = body;
+    const isHindi = language === 'hindi';
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -289,13 +290,19 @@ IMPORTANT:
             messages: [
               {
                 role: 'system',
-                content: 'You are a medical assistant helping patients understand their lab results. Provide clear, simple explanations without medical jargon. Be reassuring but accurate. Keep response under 200 words.',
+                content: isHindi
+                  ? 'आप एक मेडिकल सहायक हैं जो मरीजों को उनकी लैब रिपोर्ट समझने में मदद करते हैं। सरल हिंदी में स्पष्ट व्याख्या दें। चिकित्सा शब्दजाल से बचें। 200 शब्दों से कम रखें।'
+                  : 'You are a medical assistant helping patients understand their lab results. Provide clear, simple explanations without medical jargon. Be reassuring but accurate. Keep response under 200 words.',
               },
               {
                 role: 'user',
-                content: `Explain these abnormal lab results in simple terms: ${abnormalTests.map((t: any) => 
-                  `${t.name}: ${t.value} ${t.unit} (${t.status}, Normal: ${t.referenceRange})`
-                ).join(', ')}. What might these indicate and what should the patient do?`,
+                content: isHindi
+                  ? `इन असामान्य लैब परिणामों को सरल हिंदी में समझाएं: ${abnormalTests.map((t: any) => 
+                      `${t.name}: ${t.value} ${t.unit} (${t.status}, सामान्य: ${t.referenceRange})`
+                    ).join(', ')}. ये क्या संकेत दे सकते हैं और मरीज को क्या करना चाहिए?`
+                  : `Explain these abnormal lab results in simple terms: ${abnormalTests.map((t: any) => 
+                      `${t.name}: ${t.value} ${t.unit} (${t.status}, Normal: ${t.referenceRange})`
+                    ).join(', ')}. What might these indicate and what should the patient do?`,
               },
             ],
           }),
@@ -306,7 +313,9 @@ IMPORTANT:
           explanation = explanationData.choices[0]?.message?.content || '';
         }
       } else {
-        explanation = 'All your test results are within normal ranges. This is a positive sign indicating good health in the measured areas. Continue maintaining a healthy lifestyle.';
+        explanation = isHindi
+          ? 'आपके सभी टेस्ट परिणाम सामान्य सीमा में हैं। यह एक सकारात्मक संकेत है जो मापे गए क्षेत्रों में अच्छे स्वास्थ्य को दर्शाता है। स्वस्थ जीवनशैली बनाए रखें।'
+          : 'All your test results are within normal ranges. This is a positive sign indicating good health in the measured areas. Continue maintaining a healthy lifestyle.';
       }
 
       // Prepare chart data

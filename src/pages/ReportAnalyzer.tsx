@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, Loader2, AlertCircle, CheckCircle, AlertTriangle } from "lucide-react";
+import { Upload, FileText, Loader2, AlertCircle, CheckCircle, AlertTriangle, Languages } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 
 const ReportAnalyzer = () => {
@@ -17,6 +18,7 @@ const ReportAnalyzer = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [extractionStatus, setExtractionStatus] = useState<string>("");
+  const [language, setLanguage] = useState<"english" | "hindi">("english");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -104,6 +106,7 @@ const ReportAnalyzer = () => {
 
     setIsAnalyzing(true);
     setExtractionStatus("");
+    setAnalysisResult(null); // Clear previous results
 
     try {
       let textToAnalyze = reportText;
@@ -145,7 +148,7 @@ const ReportAnalyzer = () => {
 
       // Call edge function for analysis
       const { data, error } = await supabase.functions.invoke('analyze-report', {
-        body: { reportText: textToAnalyze },
+        body: { reportText: textToAnalyze, language },
       });
 
       if (error) {
@@ -298,7 +301,19 @@ const ReportAnalyzer = () => {
             </Card>
           </div>
 
-          <div className="text-center mb-6">
+          <div className="flex flex-col items-center gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Languages className="h-5 w-5 text-muted-foreground" />
+              <Select value={language} onValueChange={(val: "english" | "hindi") => setLanguage(val)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="english">English</SelectItem>
+                  <SelectItem value="hindi">हिन्दी (Hindi)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               onClick={analyzeReport}
               disabled={isAnalyzing || (!reportText.trim() && !file)}
@@ -311,7 +326,7 @@ const ReportAnalyzer = () => {
                   {extractionStatus || "Analyzing Report..."}
                 </>
               ) : (
-                "Analyze Report"
+                language === "hindi" ? "रिपोर्ट का विश्लेषण करें" : "Analyze Report"
               )}
             </Button>
             {isAnalyzing && extractionStatus && (
