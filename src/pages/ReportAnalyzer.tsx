@@ -105,6 +105,7 @@ const ReportAnalyzer = () => {
 
     setIsAnalyzing(true);
     setExtractionStatus("");
+    setAnalysisResult(null); // Clear previous results
 
     try {
       let textToAnalyze = reportText;
