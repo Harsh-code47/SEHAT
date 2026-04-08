@@ -50,7 +50,8 @@ Deno.serve(async (req) => {
     console.log('Authenticated user:', userId);
 
     const body = await req.json();
-    const { reportText, extractTextFromImage, imageData, fileName } = body;
+    const { reportText, extractTextFromImage, imageData, fileName, language } = body;
+    const isHindi = language === 'hindi';
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
