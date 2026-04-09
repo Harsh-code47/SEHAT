@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, Loader2, AlertCircle, CheckCircle, AlertTriangle, Languages } from "lucide-react";
+import { Upload, FileText, Loader2, AlertCircle, CheckCircle, AlertTriangle, Languages, Info } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const ReportAnalyzer = () => {
