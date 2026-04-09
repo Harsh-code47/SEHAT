@@ -445,7 +445,21 @@ const ReportAnalyzer = () => {
                       return (
                         <div key={`range-${index}`} className="space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-foreground">{test.name}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-medium text-foreground">{test.name}</span>
+                              {getTestDescription(test.name) && (
+                                <TooltipProvider delayDuration={200}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-[260px] text-xs">
+                                      <p>{getTestDescription(test.name)}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold" style={{ color: statusColor }}>
                                 {test.yourValue} {test.unit || ""}
