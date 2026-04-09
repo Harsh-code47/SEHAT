@@ -195,6 +195,51 @@ const ReportAnalyzer = () => {
     }
   };
 
+  const testDescriptions: Record<string, string> = {
+    hemoglobin: "Protein in red blood cells that carries oxygen throughout your body. Low levels may cause tiredness.",
+    "rbc count": "Red blood cells carry oxygen from your lungs to the rest of your body.",
+    "wbc count": "White blood cells fight infections. High levels may indicate infection or inflammation.",
+    "platelet count": "Tiny cells that help your blood clot to stop bleeding.",
+    hematocrit: "The percentage of your blood made up of red blood cells.",
+    mcv: "Average size of your red blood cells. Helps identify types of anemia.",
+    mch: "Average amount of hemoglobin in each red blood cell.",
+    mchc: "Average concentration of hemoglobin in your red blood cells.",
+    "total cholesterol": "Total fat in your blood. High levels increase heart disease risk.",
+    "hdl cholesterol": "Good cholesterol — higher is better. It removes bad cholesterol from your blood.",
+    "ldl cholesterol": "Bad cholesterol — lower is better. High levels can clog arteries.",
+    triglycerides: "A type of fat from food. High levels increase heart disease risk.",
+    vldl: "Very low-density lipoprotein — carries triglycerides in your blood.",
+    glucose: "Blood sugar level. High levels may indicate diabetes risk.",
+    "fasting glucose": "Blood sugar after not eating. Used to check for diabetes.",
+    creatinine: "Waste product filtered by kidneys. High levels may indicate kidney issues.",
+    urea: "Waste from protein breakdown, filtered by kidneys.",
+    "blood urea nitrogen": "Measures how well your kidneys are filtering waste.",
+    "uric acid": "Waste from breaking down purines. High levels can cause gout.",
+    bilirubin: "Produced when red blood cells break down. High levels may indicate liver problems.",
+    sgpt: "Liver enzyme — high levels may indicate liver damage or inflammation.",
+    sgot: "Liver enzyme found in heart and liver. High levels may signal damage.",
+    "alkaline phosphatase": "Enzyme in liver and bones. High levels may indicate liver or bone issues.",
+    tsh: "Controls thyroid function. Abnormal levels affect energy and metabolism.",
+    t3: "Active thyroid hormone that regulates metabolism and energy.",
+    t4: "Main thyroid hormone. Converted to T3 in the body.",
+    calcium: "Essential for bones, muscles, and nerves.",
+    iron: "Needed to make hemoglobin. Low levels cause anemia and fatigue.",
+    "vitamin d": "Important for bones and immune system. Many people are deficient.",
+    "vitamin b12": "Essential for nerve function and making red blood cells.",
+    esr: "Measures inflammation in your body. High levels suggest infection or disease.",
+    crp: "Protein that rises with inflammation. Used to detect infections or chronic conditions.",
+  };
+
+  const getTestDescription = (testName: string): string | null => {
+    const key = testName.toLowerCase().trim();
+    if (testDescriptions[key]) return testDescriptions[key];
+    // Partial match
+    for (const [k, v] of Object.entries(testDescriptions)) {
+      if (key.includes(k) || k.includes(key)) return v;
+    }
+    return null;
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "normal":
