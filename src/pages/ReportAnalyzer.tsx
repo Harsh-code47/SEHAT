@@ -378,26 +378,83 @@ const ReportAnalyzer = () => {
               {analysisResult.chartData && analysisResult.chartData.length > 0 && (
                 <Card key={`chart-${Date.now()}-${analysisResult.chartData.length}`}>
                   <CardHeader>
-                    <CardTitle>Visual Comparison with Standard Ranges</CardTitle>
-                    <CardDescription>Your values compared to reference ranges</CardDescription>
+                    <CardTitle>Your Results at a Glance</CardTitle>
+                    <CardDescription>Each bar shows where your value falls within the normal range. Green = normal, Red = needs attention.</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={[...analysisResult.chartData]}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="yourValue" name="Your Value" fill="hsl(var(--primary))">
-                          {analysisResult.chartData.map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={getStatusColor(entry.status)} />
-                          ))}
-                        </Bar>
-                        <Bar dataKey="minNormal" name="Min Normal" fill="hsl(var(--health-optimal))" opacity={0.6} />
-                        <Bar dataKey="maxNormal" name="Max Normal" fill="hsl(var(--health-optimal))" opacity={0.6} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <CardContent className="space-y-5">
+                    {[...analysisResult.chartData].map((test: any, index: number) => {
+                      const rangeSpan = test.maxNormal - test.minNormal;
+                      const displayMin = Math.max(0, test.minNormal - rangeSpan * 0.3);
+                      const displayMax = test.maxNormal + rangeSpan * 0.3;
+                      const totalSpan = displayMax - displayMin;
+                      
+                      const normalStartPct = ((test.minNormal - displayMin) / totalSpan) * 100;
+                      const normalWidthPct = ((test.maxNormal - test.minNormal) / totalSpan) * 100;
+                      const valuePct = Math.min(100, Math.max(0, ((test.yourValue - displayMin) / totalSpan) * 100));
+                      
+                      const isNormal = test.status === "Normal";
+                      const statusColor = isNormal ? "hsl(142, 71%, 45%)" : test.status === "High" ? "hsl(0, 84%, 60%)" : "hsl(38, 92%, 50%)";
+                      const statusLabel = isNormal ? "✓ Normal" : test.status === "High" ? "↑ High" : "↓ Low";
+
+                      return (
+                        <div key={`range-${index}`} className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-foreground">{test.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold" style={{ color: statusColor }}>
+                                {test.yourValue} {test.unit || ""}
+                              </span>
+                              <span
+                                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                style={{
+                                  backgroundColor: `${statusColor}20`,
+                                  color: statusColor,
+                                }}
+                              >
+                                {statusLabel}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Range bar */}
+                          <div className="relative h-6 bg-muted rounded-full overflow-hidden">
+                            {/* Normal range zone */}
+                            <div
+                              className="absolute top-0 h-full rounded-full opacity-30"
+                              style={{
+                                left: `${normalStartPct}%`,
+                                width: `${normalWidthPct}%`,
+                                backgroundColor: "hsl(142, 71%, 45%)",
+                              }}
+                            />
+                            {/* Your value marker */}
+                            <div
+                              className="absolute top-0 h-full w-1.5 rounded-full shadow-md transition-all"
+                              style={{
+                                left: `calc(${valuePct}% - 3px)`,
+                                backgroundColor: statusColor,
+                                boxShadow: `0 0 8px ${statusColor}80`,
+                              }}
+                            />
+                            {/* Your value dot */}
+                            <div
+                              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-lg"
+                              style={{
+                                left: `calc(${valuePct}% - 8px)`,
+                                backgroundColor: statusColor,
+                              }}
+                            />
+                          </div>
+
+                          {/* Range labels */}
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{test.minNormal} {test.unit || ""}</span>
+                            <span className="text-xs text-muted-foreground/70">Normal Range</span>
+                            <span>{test.maxNormal} {test.unit || ""}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </CardContent>
                 </Card>
               )}
