@@ -376,14 +376,14 @@ const ReportAnalyzer = () => {
               </Card>
 
               {analysisResult.chartData && analysisResult.chartData.length > 0 && (
-                <Card>
+                <Card key={`chart-${Date.now()}-${analysisResult.chartData.length}`}>
                   <CardHeader>
                     <CardTitle>Visual Comparison with Standard Ranges</CardTitle>
                     <CardDescription>Your values compared to reference ranges</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={analysisResult.chartData}>
+                      <BarChart data={[...analysisResult.chartData]}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                         <YAxis />
