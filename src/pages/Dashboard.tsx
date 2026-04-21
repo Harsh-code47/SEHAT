@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DoctorProfileForm } from "@/components/DoctorProfileForm";
+import { PatientProfileForm } from "@/components/PatientProfileForm";
+import { HealthRecords } from "@/components/HealthRecords";
+import { MedicationReminders } from "@/components/MedicationReminders";
+import { AppointmentActions } from "@/components/AppointmentActions";
 import { useDoctorProfile } from "@/hooks/useDoctorProfile";
 import { useAppointments } from "@/hooks/useAppointments";
 import { 
@@ -110,7 +114,7 @@ const Dashboard = () => {
 };
 
 const PatientDashboard = ({ user }: { user: any }) => {
-  const { appointments, loading: appointmentsLoading } = useAppointments(user?.id, "patient");
+  const { appointments, loading: appointmentsLoading, refetch } = useAppointments(user?.id, "patient");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const upcomingAppointments = appointments.filter(a => {
@@ -135,7 +139,7 @@ const PatientDashboard = ({ user }: { user: any }) => {
               </CardContent>
             </Link>
           </Card>
-          
+
           <Card className="hover:border-secondary transition-colors cursor-pointer">
             <Link to="/bmi-calculator">
               <CardContent className="p-6 flex flex-col items-center text-center">
@@ -147,7 +151,7 @@ const PatientDashboard = ({ user }: { user: any }) => {
               </CardContent>
             </Link>
           </Card>
-          
+
           <Card className="hover:border-accent transition-colors cursor-pointer">
             <Link to="/consultancy">
               <CardContent className="p-6 flex flex-col items-center text-center">
@@ -159,7 +163,7 @@ const PatientDashboard = ({ user }: { user: any }) => {
               </CardContent>
             </Link>
           </Card>
-          
+
           <Card className="hover:border-primary transition-colors cursor-pointer">
             <Link to="/prescription">
               <CardContent className="p-6 flex flex-col items-center text-center">
@@ -185,31 +189,40 @@ const PatientDashboard = ({ user }: { user: any }) => {
               </div>
             ) : upcomingAppointments.length > 0 ? (
               <div className="space-y-4">
-                {upcomingAppointments.slice(0, 3).map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                {upcomingAppointments.slice(0, 5).map((appointment) => (
+                  <div key={appointment.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                         <Calendar className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">
-                          {format(new Date(appointment.appointment_date), "PPP")}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {appointment.appointment_time}
-                        </p>
+                        <p className="font-medium">{format(new Date(appointment.appointment_date), "PPP")}</p>
+                        <p className="text-sm text-muted-foreground">{appointment.appointment_time}</p>
+                        {appointment.notes && (
+                          <p className="text-xs text-muted-foreground mt-1 italic line-clamp-2">Note: {appointment.notes}</p>
+                        )}
                       </div>
                     </div>
-                    {appointment.google_meet_link && (
-                      <Button
-                        size="sm"
-                        className="bg-gradient-primary"
-                        onClick={() => window.open(appointment.google_meet_link!, "_blank")}
-                      >
-                        <Video className="h-4 w-4 mr-2" />
-                        Join Meet
-                      </Button>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {appointment.google_meet_link && (
+                        <Button
+                          size="sm"
+                          className="bg-gradient-primary"
+                          onClick={() => window.open(appointment.google_meet_link!, "_blank")}
+                        >
+                          <Video className="h-4 w-4 mr-2" /> Join Meet
+                        </Button>
+                      )}
+                      <AppointmentActions
+                        appointment={{
+                          id: appointment.id,
+                          appointment_date: appointment.appointment_date,
+                          appointment_time: appointment.appointment_time,
+                          notes: appointment.notes,
+                        }}
+                        onChanged={refetch}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -225,6 +238,17 @@ const PatientDashboard = ({ user }: { user: any }) => {
             )}
           </CardContent>
         </Card>
+      </section>
+
+      {/* Medication reminders + Health records */}
+      <section className="grid lg:grid-cols-2 gap-6">
+        <MedicationReminders userId={user.id} />
+        <HealthRecords userId={user.id} />
+      </section>
+
+      {/* Profile */}
+      <section>
+        <PatientProfileForm userId={user.id} />
       </section>
     </div>
   );
