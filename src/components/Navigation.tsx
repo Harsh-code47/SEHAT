@@ -74,7 +74,6 @@ export const Navigation = () => {
 
   const doctorLinks = [
     { to: "/dashboard", label: "Home" },
-    { to: "/dashboard", label: "Dashboard" },
     { to: "/doctor/appointments", label: "Appointments" },
     { to: "/doctor/patients", label: "My Patients" },
   ];
