@@ -187,7 +187,7 @@ export const BMIMeter = ({ bmi, category }: BMIMeterProps) => {
         className="max-w-full"
       />
       <div className="text-center mt-4">
-        <div className="text-5xl font-bold text-primary">{animatedBmi.toFixed(1)}</div>
+        <div className="text-5xl font-bold text-primary">{bmi.toFixed(1)}</div>
         <div className={`text-xl font-semibold mt-1 ${getCategoryColor(category)}`}>
           {category}
         </div>

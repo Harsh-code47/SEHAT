@@ -65,7 +65,7 @@ export const Navigation = () => {
   };
 
   const patientLinks = [
-    { to: "/", label: "Home" },
+    { to: "/dashboard", label: "Home" },
     { to: "/bmi-calculator", label: "BMI" },
     { to: "/report-analyzer", label: "Report Analyzer" },
     { to: "/consultancy", label: "Consultancy" },
@@ -73,7 +73,7 @@ export const Navigation = () => {
   ];
 
   const doctorLinks = [
-    { to: "/", label: "Home" },
+    { to: "/dashboard", label: "Home" },
     { to: "/dashboard", label: "Dashboard" },
     { to: "/doctor/appointments", label: "Appointments" },
     { to: "/doctor/patients", label: "My Patients" },
