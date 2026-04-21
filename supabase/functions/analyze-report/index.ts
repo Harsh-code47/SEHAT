@@ -195,26 +195,43 @@ Deno.serve(async (req) => {
             {
               role: 'system',
               content: `You are a medical report analyzer. Extract ALL test results from the report and return structured JSON.
-              
+
 For EACH test found, extract:
 - name: The test name exactly as shown
-- value: The numeric value (just the number)
-- unit: The unit of measurement
-- referenceRange: The reference/normal range exactly as shown in the report
-- minNormal: The minimum normal value (parse from reference range)
-- maxNormal: The maximum normal value (parse from reference range)
-- status: "Normal" if value is within range, "Low" if below, "High" if above
+- value: The numeric value (just the number, no units)
+- unit: The unit of measurement (e.g. "mg/dL", "g/dL", "cells/μL")
+- referenceRange: A human-readable normal range string (e.g. "70-99 mg/dL"). NEVER return "Not provided", "N/A", or empty — always supply a value.
+- minNormal: Numeric minimum normal value
+- maxNormal: Numeric maximum normal value
+- status: "Normal" if minNormal <= value <= maxNormal, "Low" if value < minNormal, "High" if value > maxNormal. Compute strictly from the numbers.
 
-IMPORTANT: 
-- Extract ALL tests, not just common ones
-- Use the reference ranges FROM THE REPORT, not standard values
-- If reference range shows "<X", use 0 as min and X as max
-- If reference range shows ">X", use X as min and 9999 as max
-- If reference range shows "X-Y", use X as min and Y as max`,
+CRITICAL RULES:
+1. If the report explicitly provides a reference range, USE IT.
+2. If the report does NOT provide a reference range, YOU MUST fill in standard adult clinical reference ranges from your medical knowledge. Examples (adult, general population):
+   - Hemoglobin: 12-16 g/dL (women), 13.5-17.5 g/dL (men); use 12-17 g/dL if sex unknown
+   - WBC: 4000-11000 cells/μL (or 4.0-11.0 x10^3/μL)
+   - RBC: 4.2-5.9 million/μL
+   - Platelets: 150000-450000 /μL
+   - Fasting Glucose: 70-99 mg/dL (100-125 = pre-diabetic = High, >=126 = High/diabetic)
+   - Random Glucose: 70-140 mg/dL
+   - HbA1c: 4.0-5.6 %
+   - Total Cholesterol: <200 mg/dL → use 0-200
+   - LDL: <100 mg/dL → use 0-100
+   - HDL: >40 mg/dL → use 40-100
+   - Triglycerides: <150 mg/dL → use 0-150
+   - Creatinine: 0.6-1.3 mg/dL
+   - Urea/BUN: 7-20 mg/dL
+   - TSH: 0.4-4.0 mIU/L
+   - Vitamin D: 30-100 ng/mL
+   - Vitamin B12: 200-900 pg/mL
+3. NEVER return status "Normal" if the value is outside [minNormal, maxNormal]. Recompute and verify before responding.
+4. If reference range shows "<X", set minNormal=0 and maxNormal=X.
+5. If reference range shows ">X", set minNormal=X and maxNormal=X*3 (or a sensible upper bound).
+6. Extract ALL tests present, not just common ones.`,
             },
             {
               role: 'user',
-              content: `Analyze this medical report and extract ALL test values with their reference ranges as shown in the report:\n\n${reportText}`,
+              content: `Analyze this medical report. Extract every test with accurate reference ranges (use standard clinical ranges if not present in report) and correctly classify status:\n\n${reportText}`,
             },
           ],
           tools: [
