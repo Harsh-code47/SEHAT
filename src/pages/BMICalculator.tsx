@@ -16,7 +16,6 @@ const BMICalculator = () => {
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
   const [bmiResult, setBmiResult] = useState<any>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const navigate = useNavigate();
@@ -34,16 +33,29 @@ const BMICalculator = () => {
 
   const calculateBMI = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const heightNum = parseFloat(height);
+    const weightNum = parseFloat(weight);
+    const ageNum = parseInt(age);
+
+    if (!heightNum || heightNum <= 0 || !weightNum || weightNum <= 0 || !ageNum || ageNum <= 0) {
+      toast({
+        title: "Invalid input",
+        description: "Please enter valid height, weight, and age values.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCalculating(true);
 
     try {
-      const heightM = parseFloat(height) / 100;
-      const weightKg = parseFloat(weight);
-      const bmi = weightKg / (heightM * heightM);
-      
+      const heightM = heightNum / 100;
+      const bmi = weightNum / (heightM * heightM);
+
       let category = "";
       let statusIcon = null;
-      
+
       if (bmi < 18.5) {
         category = "Underweight";
         statusIcon = <TrendingDown className="h-5 w-5 text-health-warning" />;
@@ -62,19 +74,17 @@ const BMICalculator = () => {
         bmi: bmi.toFixed(1),
         category,
         statusIcon,
-        height: parseFloat(height),
-        weight: weightKg,
-        age: parseInt(age),
-        gender,
+        height: heightNum,
+        weight: weightNum,
+        age: ageNum,
       };
 
-      // Save to database
       const { error } = await supabase.from("bmi_records").insert({
         user_id: user.id,
         height: result.height,
         weight: result.weight,
         age: result.age,
-        gender: result.gender,
+        gender: "not_specified",
         bmi: parseFloat(result.bmi),
         category: result.category,
       });
@@ -120,58 +130,51 @@ const BMICalculator = () => {
                 <CardDescription>Fill in the form to calculate your BMI</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={calculateBMI} className="space-y-4">
+                <form onSubmit={calculateBMI} className="space-y-4" noValidate>
                   <div className="space-y-2">
                     <Label htmlFor="height">Height (cm)</Label>
                     <Input
                       id="height"
                       type="number"
+                      inputMode="decimal"
+                      min="1"
                       placeholder="170"
                       value={height}
                       onChange={(e) => setHeight(e.target.value)}
-                      required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="weight">Weight (kg)</Label>
                     <Input
                       id="weight"
                       type="number"
+                      inputMode="decimal"
                       step="0.1"
+                      min="1"
                       placeholder="70"
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
-                      required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="age">Age</Label>
                     <Input
                       id="age"
                       type="number"
+                      inputMode="numeric"
+                      min="1"
                       placeholder="25"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      required
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
-                    <Select value={gender} onValueChange={setGender} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
+
+                  <p className="text-xs text-muted-foreground">
+                    Note: BMI is calculated from height and weight only — gender does not affect the formula.
+                  </p>
+
                   <Button
                     type="submit"
                     className="w-full bg-gradient-primary hover:opacity-90"
