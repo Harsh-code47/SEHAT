@@ -286,8 +286,30 @@ CRITICAL RULES:
       }
 
       const parsedResult = JSON.parse(toolCall.function.arguments);
-      const tests = parsedResult.tests || [];
+      const rawTests = parsedResult.tests || [];
       const summary = parsedResult.summary || '';
+
+      // Safety net: recompute status from numeric values and ensure referenceRange is never empty
+      const tests = rawTests.map((t: any) => {
+        const value = Number(t.value);
+        const minN = Number(t.minNormal);
+        const maxN = Number(t.maxNormal);
+        let status = t.status;
+        if (Number.isFinite(value) && Number.isFinite(minN) && Number.isFinite(maxN)) {
+          if (value < minN) status = 'Low';
+          else if (value > maxN) status = 'High';
+          else status = 'Normal';
+        }
+        let referenceRange = t.referenceRange;
+        if (!referenceRange || /not provided|n\/a/i.test(referenceRange)) {
+          if (Number.isFinite(minN) && Number.isFinite(maxN)) {
+            referenceRange = `${minN} - ${maxN}${t.unit ? ' ' + t.unit : ''}`;
+          } else {
+            referenceRange = 'Range not available';
+          }
+        }
+        return { ...t, status, referenceRange };
+      });
 
       console.log(`Extracted ${tests.length} tests from report`);
 
